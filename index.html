@@ -3,17 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Hệ thống Học tập Tiếng Trung Cloud (V2)</title>
+  <title>Hệ thống Học tập Tiếng Trung PRO</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
-  
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
   <style>
-    /* Hiệu ứng nền chuyển động mượt mà */
     .animated-bg {
       background: linear-gradient(-45deg, #e0f2fe, #f3e8ff, #dbeafe, #fce7f3);
       background-size: 400% 400%;
@@ -24,34 +23,12 @@
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
-
-    /* Hiệu ứng chuyển cảnh giữa các trang */
-    .page-section {
-      transition: opacity 0.4s ease-out, transform 0.4s ease-out;
-    }
-    .page-section.hidden {
-      display: none !important;
-      opacity: 0;
-      transform: translateY(20px);
-    }
-    .page-section:not(.hidden) {
-      animation: pageEnter 0.5s forwards;
-    }
-    @keyframes pageEnter {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Hiệu ứng rung lắc khi nhập câu trả lời sai */
-    .shake {
-      animation: shakeError 0.4s cubic-bezier(.36,.07,.19,.97) both;
-    }
-    @keyframes shakeError {
-      10%, 90% { transform: translate3d(-1px, 0, 0); }
-      20%, 80% { transform: translate3d(2px, 0, 0); }
-      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-      40%, 60% { transform: translate3d(4px, 0, 0); }
-    }
+    .page-section { transition: opacity 0.4s ease-out, transform 0.4s ease-out; }
+    .page-section.hidden { display: none !important; opacity: 0; transform: translateY(20px); }
+    .page-section:not(.hidden) { animation: pageEnter 0.5s forwards; }
+    @keyframes pageEnter { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+    .shake { animation: shakeError 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shakeError { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
   </style>
 </head>
 <body class="animated-bg min-h-screen font-sans text-gray-800">
@@ -59,11 +36,15 @@
   <nav id="navbar" class="hidden bg-white/80 backdrop-blur-md shadow-md p-4 sticky top-0 z-50">
     <div class="max-w-4xl mx-auto flex justify-between items-center">
       <h1 class="text-xl font-bold text-blue-600">Hệ thống Học tập</h1>
-      <button id="btn-switch-role" class="text-sm font-medium text-gray-600 hover:text-blue-500 bg-gray-100 px-3 py-1.5 rounded-lg active:scale-95 transition-all">🔄 Đổi Vai Trò</button>
+      <div class="flex items-center gap-3">
+        <span id="user-info" class="text-sm font-semibold text-gray-700"></span>
+        <button id="btn-switch-role" class="text-sm font-medium text-gray-600 hover:text-blue-500 bg-gray-100 px-3 py-1.5 rounded-lg active:scale-95 transition-all">🔄 Đổi Vai Trò</button>
+        <button id="btn-logout" class="text-sm font-medium text-red-500 hover:text-red-700 bg-red-50 px-3 py-1.5 rounded-lg active:scale-95 transition-all">Đăng xuất</button>
+      </div>
     </div>
   </nav>
 
-  <main id="app" class="max-w-4xl mx-auto p-4 flex justify-center items-center min-h-[85vh] w-full">
+  <main id="app" class="max-w-5xl mx-auto p-4 flex justify-center items-center min-h-[85vh] w-full">
     
     <div id="page-login" class="page-section bg-white p-8 rounded-2xl shadow-xl text-center w-full max-w-sm">
       <h2 class="text-2xl font-bold mb-6">Đăng nhập</h2>
@@ -87,35 +68,38 @@
       </div>
     </div>
 
-    <div id="page-teacher" class="page-section hidden w-full grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-      
-      <div class="bg-white/95 p-5 rounded-2xl shadow-xl md:col-span-1">
-        <h3 class="font-bold text-lg text-gray-700 mb-3 pb-2 border-b">Bài tập đã lưu</h3>
-        <div id="teacher-exercise-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-          </div>
+    <div id="page-teacher" class="page-section hidden w-full grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
+      <div class="bg-white/95 p-5 rounded-2xl shadow-xl lg:col-span-1">
+        <h3 class="font-bold text-lg text-gray-700 mb-3 pb-2 border-b">Bài tập trên Cloud</h3>
+        <div id="teacher-exercise-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1"></div>
       </div>
 
-      <div class="bg-white/95 p-5 md:p-6 rounded-2xl shadow-xl md:col-span-2">
+      <div class="bg-white/95 p-5 md:p-6 rounded-2xl shadow-xl lg:col-span-3">
         <div class="flex justify-between items-center mb-4">
           <h2 id="teacher-form-title" class="text-xl font-bold text-blue-600">Thêm Bài Tập Mới</h2>
           <button id="btn-clear-edit" class="hidden text-xs bg-red-100 text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-200 transition-colors">Hủy sửa / Tạo bài mới</button>
         </div>
         
-        <div class="mb-5 border-2 border-dashed border-blue-300 p-4 rounded-xl text-center bg-blue-50/50">
-          <p class="mb-2 text-xs text-gray-600">Hệ thống tự động lọc dữ liệu từ cột: <b class="text-blue-600">Từ mới</b> và <b class="text-blue-600">Nghĩa</b>.</p>
+        <input type="text" id="input-title" placeholder="Nhập tiêu đề bài tập (VD: Bài 1 - HSK1)" class="w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition-all font-semibold mb-4 bg-blue-50/50">
+
+        <div class="mb-5 border-2 border-dashed border-blue-300 p-4 rounded-xl text-center bg-blue-50/20">
+          <p class="mb-2 text-xs text-gray-600">Tải file Excel (.xlsx). Cột tự nhận diện: <b class="text-blue-600">Từ mới, Phiên âm, Nghĩa</b>.</p>
           <input type="file" id="excel-upload" title="Chọn file excel" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer"/>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-          <input type="text" id="input-tumoi" placeholder="Từ mới" class="border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition-all">
-          <input type="text" id="input-nghia" placeholder="Nghĩa" class="border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition-all">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+          <input type="text" id="input-tumoi" placeholder="Từ mới" class="border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none">
+          <input type="text" id="input-phienam" placeholder="Phiên âm (Pinyin)" class="border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none">
+          <input type="text" id="input-nghia" placeholder="Nghĩa" class="border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none">
         </div>
-        <button id="btn-add-word" class="w-full sm:w-auto bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 active:scale-95 transition-all mb-5 text-sm font-medium">Thêm từ</button>
+        <button id="btn-add-word" class="w-full bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 active:scale-95 transition-all mb-5 text-sm font-medium">Thêm từ vào danh sách</button>
 
         <div class="overflow-x-auto max-h-52 border rounded-lg shadow-inner bg-gray-50">
           <table class="w-full text-left border-collapse text-sm">
             <thead>
-              <tr class="bg-gray-100 sticky top-0 shadow-sm"><th class="p-3 w-1/2">Từ mới</th><th class="p-3 w-1/2">Nghĩa</th></tr>
+              <tr class="bg-gray-100 sticky top-0 shadow-sm">
+                <th class="p-3">Từ mới</th><th class="p-3">Phiên âm</th><th class="p-3">Nghĩa</th><th class="p-3 text-center w-16">Xóa</th>
+              </tr>
             </thead>
             <tbody id="teacher-word-list" class="divide-y bg-white"></tbody>
           </table>
@@ -124,26 +108,33 @@
       </div>
     </div>
 
-    <div id="page-student-list" class="page-section hidden w-full max-w-2xl">
-      <h2 class="text-2xl font-bold mb-6 text-gray-800 drop-shadow-sm text-center">Danh sách Bài tập Trực tuyến</h2>
-      <div id="exercise-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+    <div id="page-student-list" class="page-section hidden w-full max-w-3xl">
+      <h2 class="text-2xl font-bold mb-6 text-gray-800 drop-shadow-sm text-center">Danh sách Bài tập</h2>
+      <div id="exercise-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
 
-    <div id="page-student-quiz" class="page-section hidden w-full bg-white p-5 md:p-8 rounded-2xl shadow-xl max-w-xl mx-auto">
+    <div id="page-student-quiz" class="page-section hidden w-full bg-white p-5 md:p-8 rounded-2xl shadow-xl max-w-2xl mx-auto">
       <button id="btn-back-exercises" class="text-gray-500 hover:text-gray-800 mb-4 inline-block font-medium text-sm transition-colors">← Quay lại danh sách</button>
       
       <div id="quiz-setup" class="mb-6 bg-gray-50 p-4 rounded-xl border">
         <h3 class="font-bold mb-3 text-gray-700 text-sm">Chọn thông tin làm từ gợi ý (Câu hỏi):</h3>
-        <div class="flex gap-6 text-sm">
+        <div class="flex flex-wrap gap-4 text-sm">
           <label class="cursor-pointer flex items-center gap-2 font-medium"><input type="radio" name="prompt_type" value="tumoi" checked class="w-4 h-4 text-blue-600"> Từ mới</label>
+          <label class="cursor-pointer flex items-center gap-2 font-medium"><input type="radio" name="prompt_type" value="phienam" class="w-4 h-4 text-blue-600"> Phiên âm</label>
           <label class="cursor-pointer flex items-center gap-2 font-medium"><input type="radio" name="prompt_type" value="nghia" class="w-4 h-4 text-blue-600"> Nghĩa</label>
         </div>
         <button id="btn-start-quiz" class="mt-4 w-full bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-all active:scale-95 text-sm">Bắt đầu làm bài</button>
       </div>
 
-      <div id="quiz-area" class="hidden text-center">
-        <div class="mb-2 text-xs md:text-sm text-gray-400 font-bold tracking-wider uppercase" id="quiz-progress">Từ 1 / 10</div>
-        <div class="text-4xl md:text-5xl font-bold text-blue-600 mb-8 py-6 border-b border-gray-100" id="quiz-prompt">---</div>
+      <div id="quiz-area" class="hidden text-center relative">
+        <div class="mb-2 text-xs md:text-sm text-gray-400 font-bold tracking-wider uppercase flex justify-between items-center">
+          <span id="quiz-progress">Từ 1 / 10</span>
+          <button id="btn-skip-word" class="bg-gray-200 text-gray-700 px-3 py-1 rounded hover:bg-gray-300 transition-colors">Bỏ qua ⏭</button>
+        </div>
+        <div class="mb-8 py-6 border-b border-gray-100 flex flex-col items-center justify-center min-h-[120px]" id="quiz-prompt-container">
+          <div class="text-5xl font-bold text-blue-600" id="quiz-prompt">---</div>
+          <div class="text-2xl text-gray-400 mt-2 font-medium hidden" id="quiz-pinyin">---</div>
+        </div>
         
         <div class="grid grid-cols-1 gap-4 max-w-sm mx-auto" id="quiz-inputs-container"></div>
       </div>
@@ -166,17 +157,20 @@
   measurementId: "G-QB3PNTRMMC"
 };
     
-    // Khởi tạo kết nối đến Firebase Cloud
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
+    const auth = firebase.auth();
+    const provider = new firebase.auth.GoogleAuthProvider();
     // -------------------------------------------------------------
 
+    let currentUser = null;
     let currentExercise = []; 
     let savedExercises = []; 
     let activeQuiz = null; 
+    let activeExerciseId = null;
     let quizCurrentIndex = 0;
     let quizPromptType = 'tumoi'; 
-    let editingExerciseId = null; // Quản lý ID bài tập đang được chọn để sửa
+    let editingExerciseId = null; 
 
     const pages = {
       login: document.getElementById('page-login'),
@@ -186,288 +180,300 @@
       studentQuiz: document.getElementById('page-student-quiz')
     };
 
-    // TỰ ĐỘNG ĐỒNG BỘ DỮ LIỆU TỪ CLOUD VỀ MÁY TRẠM
-    database.ref('exercises').on('value', (snapshot) => {
-      const data = snapshot.val();
-      savedExercises = data ? Object.values(data) : [];
-      
-      // Đồng bộ làm mới danh sách bài tập ở cả màn hình giảng viên và sinh viên
-      if (!pages.studentList.classList.contains('hidden')) renderStudentExercises();
-      if (!pages.teacher.classList.contains('hidden')) renderTeacherExerciseList();
-    });
-
-    // Điều hướng giữa các màn hình trang web
     function showPage(pageId) {
       Object.values(pages).forEach(p => p.classList.add('hidden'));
       pages[pageId].classList.remove('hidden');
-      
       const nav = document.getElementById('navbar');
       if (pageId === 'login') nav.classList.add('hidden');
       else nav.classList.remove('hidden');
     }
 
-    document.getElementById('btn-google-login').addEventListener('click', () => showPage('role'));
-    document.getElementById('btn-switch-role').addEventListener('click', () => {
-      resetTeacherForm();
-      showPage('role');
+    // --- AUTHENTICATION (GOOGLE LOGIN) ---
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('user-info').innerText = `👤 ${user.displayName}`;
+        showPage('role');
+      } else {
+        currentUser = null;
+        showPage('login');
+      }
+    });
+
+    document.getElementById('btn-google-login').addEventListener('click', () => {
+      auth.signInWithPopup(provider).catch(error => {
+        alert("Lỗi đăng nhập Google: " + error.message + "\n(Vui lòng kiểm tra đã bật Google Auth trong Firebase chưa!)");
+      });
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', () => auth.signOut());
+    document.getElementById('btn-switch-role').addEventListener('click', () => { resetTeacherForm(); showPage('role'); });
+
+    // --- CLOUD SYNC ---
+    database.ref('exercises').on('value', (snapshot) => {
+      const data = snapshot.val();
+      savedExercises = data ? Object.values(data) : [];
+      if (!pages.studentList.classList.contains('hidden')) renderStudentExercises();
+      if (!pages.teacher.classList.contains('hidden')) renderTeacherExerciseList();
     });
 
     document.getElementById('role-teacher').addEventListener('click', () => {
-      resetTeacherForm();
-      renderTeacherExerciseList();
-      showPage('teacher');
+      resetTeacherForm(); renderTeacherExerciseList(); showPage('teacher');
     });
-
     document.getElementById('role-student').addEventListener('click', () => {
-      renderStudentExercises();
-      showPage('studentList');
+      renderStudentExercises(); showPage('studentList');
     });
 
-    // --- LOGIC PHÂN HỆ GIẢNG VIÊN ---
-    const tbody = document.getElementById('teacher-word-list');
-
+    // --- GIẢNG VIÊN (TEACHER LOGIC) ---
     function renderTeacherList() {
-      tbody.innerHTML = currentExercise.map(word => `
+      const tbody = document.getElementById('teacher-word-list');
+      tbody.innerHTML = currentExercise.map((word, idx) => `
         <tr class="hover:bg-gray-50 transition-colors">
           <td class="p-3 font-semibold text-gray-800">${word.tumoi}</td>
+          <td class="p-3 text-gray-600">${word.phienam}</td>
           <td class="p-3 text-gray-600">${word.nghia}</td>
+          <td class="p-3 text-center">
+            <button onclick="removeWord(${idx})" class="text-red-500 hover:text-red-700 bg-red-50 p-1.5 rounded font-bold">🗑</button>
+          </td>
         </tr>
       `).join('');
     }
 
-    // Hiển thị danh sách bài tập ở cột trái trang Giảng viên
+    window.removeWord = (idx) => {
+      currentExercise.splice(idx, 1);
+      renderTeacherList();
+    };
+
     function renderTeacherExerciseList() {
       const container = document.getElementById('teacher-exercise-list');
-      if (savedExercises.length === 0) {
-        container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">Chưa có bài tập nào.</p>`;
-        return;
-      }
+      if (savedExercises.length === 0) return container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">Chưa có bài tập.</p>`;
       const sorted = [...savedExercises].reverse();
       container.innerHTML = sorted.map(ex => `
         <div class="p-3 rounded-xl border bg-gray-50 flex justify-between items-center gap-2 text-xs ${editingExerciseId === ex.id ? 'ring-2 ring-blue-500 bg-blue-50/50' : ''}">
           <div class="overflow-hidden">
-            <p class="font-bold text-gray-700 truncate">Bài ngày ${ex.date}</p>
-            <p class="text-gray-400 text-[10px] mt-0.5">Số từ: ${ex.words.length} từ</p>
+            <p class="font-bold text-gray-700 truncate">${ex.title}</p>
+            <p class="text-gray-400 text-[10px] mt-0.5">${ex.date} | ${ex.words.length} từ</p>
           </div>
-          <button onclick="startEditExercise(${ex.id})" class="bg-blue-500 text-white px-3 py-1.5 rounded-md hover:bg-blue-600 transition-colors font-medium shrink-0 shadow-sm">Sửa</button>
+          <button onclick="startEditExercise(${ex.id})" class="bg-blue-500 text-white px-3 py-1.5 rounded-md hover:bg-blue-600 transition-colors font-medium shrink-0">Sửa</button>
         </div>
       `).join('');
     }
 
-    // Kích hoạt chế độ sửa bài tập
     window.startEditExercise = (id) => {
       const selected = savedExercises.find(ex => ex.id === id);
       if (!selected) return;
-
       editingExerciseId = id;
-      currentExercise = [...selected.words]; // Tải dữ liệu từ bài tập cũ vào vùng nhớ đệm
+      currentExercise = [...selected.words];
+      document.getElementById('input-title').value = selected.title;
       
-      // Cập nhật giao diện biên tập sang trạng thái "Cập nhật"
-      document.getElementById('teacher-form-title').innerText = `Sửa Bài Tập (Mã: #${id})`;
+      document.getElementById('teacher-form-title').innerText = `Sửa Bài Tập`;
       document.getElementById('btn-clear-edit').classList.remove('hidden');
-      document.getElementById('btn-save-exercise').innerText = "Cập Nhật Bài Tập Lên Cloud";
+      document.getElementById('btn-save-exercise').innerText = "Cập Nhật Bài Lên Cloud";
       document.getElementById('btn-save-exercise').classList.replace('bg-green-500', 'bg-blue-600');
       document.getElementById('btn-save-exercise').classList.replace('hover:bg-green-600', 'hover:bg-blue-700');
-
-      renderTeacherList();
-      renderTeacherExerciseList();
+      renderTeacherList(); renderTeacherExerciseList();
     };
 
-    // Đưa Form biên tập của Giảng viên về trạng thái thêm mới mặc định
     function resetTeacherForm() {
-      editingExerciseId = null;
-      currentExercise = [];
+      editingExerciseId = null; currentExercise = [];
+      document.getElementById('input-title').value = '';
       document.getElementById('teacher-form-title').innerText = "Thêm Bài Tập Mới";
       document.getElementById('btn-clear-edit').classList.add('hidden');
-      document.getElementById('btn-save-exercise').innerText = "Lưu Bài Tập Lên Đám Mây (Cloud)";
+      document.getElementById('btn-save-exercise').innerText = "Lưu Bài Tập Mới Lên Cloud";
       document.getElementById('btn-save-exercise').classList.replace('bg-blue-600', 'bg-green-500');
       document.getElementById('btn-save-exercise').classList.replace('hover:bg-blue-700', 'hover:bg-green-600');
       renderTeacherList();
     }
 
-    document.getElementById('btn-clear-edit').addEventListener('click', () => {
-      resetTeacherForm();
-      renderTeacherExerciseList();
-    });
+    document.getElementById('btn-clear-edit').addEventListener('click', () => { resetTeacherForm(); renderTeacherExerciseList(); });
 
-    // Thêm từ thủ công bằng nút bấm
     document.getElementById('btn-add-word').addEventListener('click', () => {
       const tumoi = document.getElementById('input-tumoi').value.trim();
+      const phienam = document.getElementById('input-phienam').value.trim();
       const nghia = document.getElementById('input-nghia').value.trim();
-
-      if (tumoi && nghia) {
-        currentExercise.push({ tumoi, nghia });
+      if (tumoi && phienam && nghia) {
+        currentExercise.push({ tumoi, phienam, nghia });
         renderTeacherList();
-        document.getElementById('input-tumoi').value = '';
-        document.getElementById('input-nghia').value = '';
-      } else {
-        alert("Vui lòng nhập đầy đủ cả Từ mới và Nghĩa!");
-      }
+        document.getElementById('input-tumoi').value = ''; document.getElementById('input-phienam').value = ''; document.getElementById('input-nghia').value = '';
+      } else alert("Vui lòng nhập đủ Từ mới, Phiên âm và Nghĩa!");
     });
 
-    // THUẬT TOÁN ĐỌC FILE EXCEL THÔNG MINH (Bỏ qua cột Phiên âm)
     document.getElementById('excel-upload').addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-
+      const file = e.target.files[0]; if (!file) return;
       const reader = new FileReader();
       reader.onload = (evt) => {
         const data = new Uint8Array(evt.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        const json = XLSX.utils.sheet_to_json(XLSX.read(data, { type: 'array' }).Sheets[XLSX.read(data, { type: 'array' }).SheetNames[0]], { header: 1 });
+        let headerRowIdx = -1; let colMap = { tumoi: -1, phienam: -1, nghia: -1 };
 
-        let headerRowIdx = -1;
-        let colMap = { tumoi: -1, nghia: -1 };
-
-        // Quét tự động để tìm vị trí hàng chứa tiêu đề (Header)
         for (let i = 0; i < json.length; i++) {
-          const row = json[i];
-          if (!row) continue;
-          let tM = -1, ng = -1;
-
-          row.forEach((cell, idx) => {
-            if (cell !== undefined && cell !== null) {
+          if (!json[i]) continue;
+          let tM = -1, pA = -1, ng = -1;
+          json[i].forEach((cell, idx) => {
+            if (cell) {
               const val = String(cell).trim().toLowerCase();
-              if (val === "từ mới" || val === "tumoi" || val === "từmới") tM = idx;
+              if (val === "từ mới" || val === "tumoi") tM = idx;
+              else if (val === "phiên âm" || val === "phienam") pA = idx;
               else if (val === "nghĩa" || val === "nghia") ng = idx;
             }
           });
-
-          if (tM !== -1 && ng !== -1) {
-            headerRowIdx = i;
-            colMap = { tumoi: tM, nghia: ng };
-            break;
-          }
+          if (tM !== -1 && pA !== -1 && ng !== -1) { headerRowIdx = i; colMap = { tumoi: tM, phienam: pA, nghia: ng }; break; }
         }
 
-        // Trích xuất dữ liệu từ các hàng bên dưới
         if (headerRowIdx !== -1) {
-          let addedCount = 0;
+          let count = 0;
           for (let i = headerRowIdx + 1; i < json.length; i++) {
+            if (!json[i]) continue;
             const row = json[i];
-            if (!row) continue;
-
-            const tumoiVal = row[colMap.tumoi] !== undefined ? String(row[colMap.tumoi]).trim() : "";
-            const nghiaVal = row[colMap.nghia] !== undefined ? String(row[colMap.nghia]).trim() : "";
-
-            if (tumoiVal !== "") {
-              currentExercise.push({ tumoi: tumoiVal, nghia: nghiaVal });
-              addedCount++;
-            }
+            const t = row[colMap.tumoi] ? String(row[colMap.tumoi]).trim() : "";
+            const p = row[colMap.phienam] ? String(row[colMap.phienam]).trim() : "";
+            const n = row[colMap.nghia] ? String(row[colMap.nghia]).trim() : "";
+            if (t !== "") { currentExercise.push({ tumoi: t, phienam: p, nghia: n }); count++; }
           }
-
-          if (addedCount > 0) {
-            renderTeacherList();
-            alert(`Tải thành công! Đã trích xuất ${addedCount} từ vào bảng biên tập.`);
-          } else {
-            alert("Không phát hiện thấy hàng dữ liệu hợp lệ phía dưới tiêu đề.");
-          }
-        } else {
-          alert("LỖI: File Excel thiếu cột tiêu đề bắt buộc ('Từ mới' và 'Nghĩa')!");
-        }
+          if (count > 0) { renderTeacherList(); alert(`Đã trích xuất ${count} từ.`); }
+        } else alert("LỖI: Excel thiếu cột (Từ mới, Phiên âm, Nghĩa)!");
       };
-      reader.readAsArrayBuffer(file);
-      e.target.value = '';
+      reader.readAsArrayBuffer(file); e.target.value = '';
     });
 
-    // LƯU BÀI TẬP LÊN CLOUD DATABASE (Tự động phân biệt Tạo mới hay Cập nhật bài cũ)
     document.getElementById('btn-save-exercise').addEventListener('click', () => {
-      if (currentExercise.length === 0) return alert("Hiện chưa có từ vựng nào trong danh sách!");
-      
+      if (currentExercise.length === 0) return alert("Chưa có từ vựng nào!");
+      const title = document.getElementById('input-title').value.trim() || `Bài tập tự do (${new Date().toLocaleDateString('vi-VN')})`;
       const isEditing = editingExerciseId !== null;
       const exerciseId = isEditing ? editingExerciseId : Date.now();
       
       const targetExercise = {
         id: exerciseId,
+        title: title,
         date: isEditing ? savedExercises.find(ex => ex.id === exerciseId).date : new Date().toLocaleDateString('vi-VN'),
         words: [...currentExercise]
       };
 
-      database.ref('exercises/' + exerciseId).set(targetExercise)
-        .then(() => {
-          alert(isEditing ? "🎉 Cập nhật bài tập thành công lên hệ thống Cloud!" : "🎉 Tạo và lưu bài tập mới thành công lên Cloud!");
-          resetTeacherForm();
-          renderTeacherExerciseList();
-        })
-        .catch((error) => {
-          alert("Lỗi kết nối Cloud: " + error.message);
-        });
+      database.ref('exercises/' + exerciseId).set(targetExercise).then(() => {
+        alert(isEditing ? "Cập nhật thành công!" : "Tạo bài mới thành công!");
+        resetTeacherForm(); renderTeacherExerciseList();
+      }).catch(err => alert("Lỗi: " + err.message));
     });
 
-    // --- LOGIC PHÂN HỆ SINH VIÊN ---
+    // --- SINH VIÊN (STUDENT LOGIC) ---
     function renderStudentExercises() {
       const container = document.getElementById('exercise-list');
-      if (savedExercises.length === 0) {
-        container.innerHTML = `<p class="col-span-full text-center text-gray-500 bg-white p-6 rounded-xl border">Hiện chưa có bài tập nào trên hệ thống Cloud.</p>`;
-        return;
-      }
-      const sortedExercises = [...savedExercises].reverse();
-      container.innerHTML = sortedExercises.map((ex, idx) => `
-        <div class="bg-white p-5 rounded-xl shadow border border-gray-100 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-blue-400 transition-all active:scale-95" onclick="openQuizById(${ex.id})">
-          <h3 class="font-bold text-lg text-blue-600">Bài tập ngày ${ex.date}</h3>
-          <p class="text-xs text-gray-400 mt-2">Mã bài: #${ex.id} | Số từ: ${ex.words.length} từ</p>
-        </div>
-      `).join('');
+      if (savedExercises.length === 0) return container.innerHTML = `<p class="col-span-full text-center text-gray-500 bg-white p-6 rounded-xl border">Chưa có bài tập.</p>`;
+      const sorted = [...savedExercises].reverse();
+      
+      // Fetch user progress to display
+      database.ref(`progress/${currentUser.uid}`).once('value').then(snap => {
+        const progressData = snap.val() || {};
+        container.innerHTML = sorted.map(ex => {
+          const prog = progressData[ex.id];
+          let statusHtml = `<span class="text-gray-400">Chưa làm</span>`;
+          if (prog && prog.currentIndex > 0) {
+            statusHtml = prog.currentIndex >= ex.words.length ? `<span class="text-green-500 font-bold">Hoàn thành ✔</span>` : `<span class="text-orange-500 font-bold">Đang làm (${prog.currentIndex}/${ex.words.length})</span>`;
+          }
+          return `
+            <div class="bg-white p-5 rounded-xl shadow border border-gray-100 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-blue-400 transition-all active:scale-95" onclick="openQuizById(${ex.id})">
+              <h3 class="font-bold text-lg text-blue-600">${ex.title}</h3>
+              <p class="text-xs text-gray-500 mt-2 flex justify-between">
+                <span>Số từ: ${ex.words.length} | ${ex.date}</span>
+                ${statusHtml}
+              </p>
+            </div>
+          `;
+        }).join('');
+      });
     }
 
     window.openQuizById = (id) => {
+      activeExerciseId = id;
       const selected = savedExercises.find(ex => ex.id === id);
-      if(!selected) return;
       activeQuiz = selected.words;
-      document.getElementById('quiz-area').classList.add('hidden');
-      document.getElementById('quiz-setup').classList.remove('hidden');
-      showPage('studentQuiz');
+      
+      database.ref(`progress/${currentUser.uid}/${id}`).once('value').then(snap => {
+        const prog = snap.val();
+        if (prog && prog.currentIndex > 0 && prog.currentIndex < activeQuiz.length) {
+          if(confirm(`Bạn đang làm dở đến từ thứ ${prog.currentIndex}.\n\nChọn [OK] để LÀM TIẾP.\nChọn [Hủy/Cancel] để LÀM LẠI TỪ ĐẦU.`)) {
+            quizCurrentIndex = prog.currentIndex;
+          } else {
+            quizCurrentIndex = 0;
+            saveProgress(); // Reset về 0
+          }
+        } else {
+          quizCurrentIndex = 0;
+        }
+        document.getElementById('quiz-area').classList.add('hidden');
+        document.getElementById('quiz-setup').classList.remove('hidden');
+        showPage('studentQuiz');
+      });
     };
 
-    document.getElementById('btn-back-exercises').addEventListener('click', () => showPage('studentList'));
+    document.getElementById('btn-back-exercises').addEventListener('click', () => {
+      renderStudentExercises();
+      showPage('studentList');
+    });
 
     document.getElementById('btn-start-quiz').addEventListener('click', () => {
       quizPromptType = document.querySelector('input[name="prompt_type"]:checked').value;
-      quizCurrentIndex = 0;
       document.getElementById('quiz-setup').classList.add('hidden');
       document.getElementById('quiz-area').classList.remove('hidden');
       loadQuizWord();
     });
 
+    function saveProgress() {
+      if(!currentUser || !activeExerciseId) return;
+      database.ref(`progress/${currentUser.uid}/${activeExerciseId}`).set({ currentIndex: quizCurrentIndex });
+    }
+
     function loadQuizWord() {
       if (quizCurrentIndex >= activeQuiz.length) {
-        alert("🎉 Chúc mừng! Bạn đã hoàn thành bài tập trực tuyến.");
+        alert("🎉 Chúc mừng bạn đã hoàn thành bài tập!");
+        saveProgress();
+        renderStudentExercises();
         showPage('studentList');
         return;
       }
 
       const word = activeQuiz[quizCurrentIndex];
       document.getElementById('quiz-progress').innerText = `Từ ${quizCurrentIndex + 1} / ${activeQuiz.length}`;
-      document.getElementById('quiz-prompt').innerText = word[quizPromptType];
+      
+      const promptEl = document.getElementById('quiz-prompt');
+      const pinyinEl = document.getElementById('quiz-pinyin');
+      
+      promptEl.innerText = word[quizPromptType];
+      
+      // Hiển thị pinyin ở dưới nếu gợi ý là Từ mới
+      if (quizPromptType === 'tumoi') {
+        pinyinEl.innerText = word.phienam;
+        pinyinEl.classList.remove('hidden');
+      } else {
+        pinyinEl.classList.add('hidden');
+      }
 
       const inputContainer = document.getElementById('quiz-inputs-container');
       inputContainer.innerHTML = '';
 
-      // Chỉ lọc lấy duy nhất 1 ô cần điền dựa theo lựa chọn gợi ý đầu vào
       const fields = [
         { key: 'tumoi', label: 'Từ mới' },
+        { key: 'phienam', label: 'Phiên âm (Pinyin)' },
         { key: 'nghia', label: 'Nghĩa' }
       ].filter(f => f.key !== quizPromptType);
 
       fields.forEach(field => {
         const input = document.createElement('input');
-        input.type = 'text';
-        input.placeholder = `Nhập đúng ${field.label}`;
-        input.dataset.key = field.key;
-        input.dataset.correct = word[field.key];
-        input.className = "quiz-input border-2 p-4 rounded-xl text-base text-center outline-none focus:border-blue-400 transition-all font-semibold shadow-sm bg-gray-50 w-full";
-        
+        input.type = 'text'; input.placeholder = `Nhập ${field.label}`;
+        input.dataset.key = field.key; input.dataset.correct = word[field.key];
+        input.className = "quiz-input border-2 p-3.5 rounded-xl text-base text-center outline-none focus:border-blue-400 transition-all font-semibold bg-gray-50";
         input.addEventListener('change', checkInput);
         inputContainer.appendChild(input);
       });
       
-      setTimeout(() => {
-        const firstInp = inputContainer.querySelector('input');
-        if(firstInp) firstInp.focus();
-      }, 100);
+      setTimeout(() => { const firstInp = inputContainer.querySelector('input'); if(firstInp) firstInp.focus(); }, 100);
     }
+
+    document.getElementById('btn-skip-word').addEventListener('click', () => {
+      quizCurrentIndex++;
+      saveProgress();
+      loadQuizWord();
+    });
 
     function checkInput(e) {
       const input = e.target;
@@ -480,12 +486,8 @@
         input.disabled = true;
         checkAllDone();
       } else if (userVal !== '') {
-        // Làm sai: Viền đỏ + chữ đỏ + rung lắc và tự động xóa sau 400 mili giây
         input.classList.add('border-red-500', 'text-red-500', 'shake');
-        setTimeout(() => {
-          input.value = '';
-          input.classList.remove('shake');
-        }, 400);
+        setTimeout(() => { input.value = ''; input.classList.remove('shake'); }, 400);
       }
     }
 
@@ -493,14 +495,12 @@
       const inputs = document.querySelectorAll('.quiz-input');
       const allCorrect = Array.from(inputs).every(inp => inp.disabled);
       if (allCorrect) {
-        setTimeout(() => {
-          quizCurrentIndex++;
-          loadQuizWord();
-        }, 800); 
+        quizCurrentIndex++;
+        saveProgress();
+        setTimeout(() => loadQuizWord(), 800); 
       }
     }
 
-    // Khởi chạy ứng dụng tại màn hình Login mặc định
     showPage('login');
   </script>
 </body>
