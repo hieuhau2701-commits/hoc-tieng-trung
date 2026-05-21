@@ -6,193 +6,142 @@
     <title>Ứng Dụng Học Tiếng Trung</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0fdfa; /* Teal-50 */
-            color: #0f172a;
-        }
-        .fade-in {
-            animation: fadeIn 0.3s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .shake {
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-        }
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
+        .fade-in { animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
-
-    <!-- Header -->
-    <header class="bg-teal-600 text-white shadow-md p-4">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold flex items-center gap-2">
-                <span class="text-2xl">🇨🇳</span> Tiếng Trung Pro
-            </h1>
-            <div id="user-info" class="hidden text-sm font-medium flex items-center gap-4">
-                <span id="welcome-text"></span>
-                <button onclick="logout()" class="bg-teal-700 hover:bg-teal-800 px-3 py-1 rounded transition">Đăng xuất</button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content Area -->
-    <main id="app-content" class="flex-grow flex items-center justify-center p-4 max-w-4xl mx-auto w-full">
-        <!-- Content will be injected here by JS -->
-    </main>
+<body class="bg-gray-100 min-h-screen text-gray-800 font-sans">
+    
+    <div id="app" class="flex flex-col min-h-screen"></div>
 
     <script>
-        // --- STATE MANAGEMENT ---
-        let currentUser = null; // { role: 'teacher' | 'student', name: '...' }
-        
-        // Mock Data
-        let lessons = [
-            {
-                id: 1,
-                title: "Bài 1: Xin chào",
-                words: [
-                    { zh: "你好", py: "nǐ hǎo", vi: "xin chào" },
-                    { zh: "谢谢", py: "xièxie", vi: "cảm ơn" },
-                    { zh: "再见", py: "zàijiàn", vi: "tạm biệt" }
-                ]
-            }
-        ];
+        // --- DỮ LIỆU LƯU TRỮ TẠM THỜI ---
+        let currentUser = null; 
+        let lessons = []; 
+        let currentExercise = null; 
 
-        let practiceState = {
-            lesson: null,
-            mode: null, // 'show-zh', 'show-py', 'show-vi'
-            currentWordIndex: 0,
-            field1Passed: false,
-            field2Passed: false
-        };
+        const appDiv = document.getElementById('app');
 
-        const contentDiv = document.getElementById('app-content');
-        const userInfoDiv = document.getElementById('user-info');
-        const welcomeText = document.getElementById('welcome-text');
-
-        // --- CORE FUNCTIONS ---
-        function render() {
+        // --- ĐIỀU HƯỚNG MÀN HÌNH ---
+        function renderApp() {
             if (!currentUser) {
-                userInfoDiv.classList.add('hidden');
                 renderLogin();
+            } else if (currentUser.role === 'teacher') {
+                renderTeacherDashboard();
             } else {
-                userInfoDiv.classList.remove('hidden');
-                welcomeText.textContent = `Chào, ${currentUser.name} (${currentUser.role === 'teacher' ? 'Giảng viên' : 'Sinh viên'})`;
-                
-                if (currentUser.role === 'teacher') {
-                    renderTeacherDashboard();
-                } else {
-                    renderStudentDashboard();
-                }
+                renderStudentDashboard();
             }
         }
 
-        function logout() {
-            currentUser = null;
-            render();
-        }
-
+        // --- ĐĂNG NHẬP ---
         function renderLogin() {
-            contentDiv.innerHTML = `
-                <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md fade-in">
-                    <h2 class="text-2xl font-bold text-center text-teal-600 mb-6">Đăng Nhập Học Tập</h2>
-                    <p class="text-gray-500 text-sm text-center mb-6">Chọn vai trò của bạn để tiếp tục (Bản Demo)</p>
-                    
-                    <div class="space-y-4">
-                        <button onclick="login('teacher')" class="w-full bg-teal-100 hover:bg-teal-200 text-teal-800 font-semibold py-3 px-4 rounded-xl border-2 border-teal-200 transition flex items-center justify-center gap-2">
-                            <span>👨‍🏫</span> Tôi là Giảng Viên
-                        </button>
-                        <button onclick="login('student')" class="w-full bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold py-3 px-4 rounded-xl border-2 border-blue-200 transition flex items-center justify-center gap-2">
-                            <span>👨‍🎓</span> Tôi là Sinh Viên
-                        </button>
+            appDiv.innerHTML = `
+                <div class="flex-grow flex items-center justify-center p-4">
+                    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md fade-in">
+                        <h1 class="text-3xl font-bold text-center text-teal-600 mb-8">Học Tiếng Trung</h1>
+                        <div class="space-y-4">
+                            <button onclick="login('teacher')" class="w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-teal-700 transition shadow-md">Đăng nhập Giảng Viên</button>
+                            <button onclick="login('student')" class="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-blue-700 transition shadow-md">Đăng nhập Sinh Viên</button>
+                        </div>
                     </div>
                 </div>
             `;
         }
 
         function login(role) {
-            currentUser = {
-                role: role,
-                name: role === 'teacher' ? 'Thầy/Cô Giáo' : 'Học Viên'
-            };
-            render();
+            currentUser = { role: role, username: role === 'teacher' ? 'Giảng viên' : 'Sinh viên' };
+            renderApp();
         }
 
-        function renderTeacherDashboard() {
-            let lessonsHtml = lessons.map((l, index) => `
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center mb-3">
-                    <div>
-                        <h3 class="font-bold text-lg text-gray-800">${l.title}</h3>
-                        <p class="text-sm text-gray-500">${l.words.length} từ vựng</p>
-                    </div>
-                    <button class="text-teal-600 hover:bg-teal-50 p-2 rounded-lg transition" onclick="alert('Chức năng sửa đang được cập nhật')">Xem chi tiết</button>
-                </div>
-            `).join('');
+        function logout() {
+            currentUser = null;
+            renderApp();
+        }
 
-            contentDiv.innerHTML = `
-                <div class="w-full max-w-2xl fade-in">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-2xl font-bold text-gray-800">Quản Lý Bài Học</h2>
-                        <button onclick="renderCreateLesson()" class="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl shadow transition font-medium">
-                            + Tạo bài mới
-                        </button>
+        function renderNavbar() {
+            return `
+                <nav class="bg-white shadow-sm p-4 sticky top-0 z-10">
+                    <div class="max-w-4xl mx-auto flex justify-between items-center">
+                        <h1 class="font-bold text-xl text-teal-600">Học Tiếng Trung</h1>
+                        <div class="flex items-center gap-4">
+                            <span class="text-sm text-gray-600 font-medium">Chào, ${currentUser.username}</span>
+                            <button onclick="logout()" class="text-sm bg-red-50 text-red-500 px-3 py-1 rounded-lg hover:bg-red-100 font-medium transition">Đăng xuất</button>
+                        </div>
                     </div>
-                    ${lessonsHtml.length > 0 ? lessonsHtml : '<p class="text-center text-gray-500">Chưa có bài học nào.</p>'}
+                </nav>
+            `;
+        }
+
+        // --- GIAO DIỆN GIẢNG VIÊN ---
+        function renderTeacherDashboard() {
+            let lessonsHtml = lessons.length === 0 
+                ? '<div class="text-center py-12 text-gray-400"><p>Chưa có bài học nào.</p><p class="text-sm mt-1">Hãy bấm tạo bài mới nhé!</p></div>'
+                : lessons.map((l) => `
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 flex justify-between items-center mb-3 hover:shadow-md transition">
+                        <div>
+                            <h3 class="font-bold text-gray-800 text-lg">${l.title}</h3>
+                            <p class="text-sm text-teal-600 font-medium mt-1">${l.words.length} từ vựng</p>
+                        </div>
+                    </div>
+                `).join('');
+
+            appDiv.innerHTML = `
+                ${renderNavbar()}
+                <div class="flex-grow p-4 max-w-4xl mx-auto w-full fade-in">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800">Quản lý bài học</h2>
+                        <button onclick="renderCreateLesson()" class="bg-teal-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm hover:bg-teal-700 transition">+ Tạo bài mới</button>
+                    </div>
+                    <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
+                        ${lessonsHtml}
+                    </div>
                 </div>
             `;
         }
 
         function renderCreateLesson() {
-            contentDiv.innerHTML = `
-                <div class="w-full max-w-3xl bg-white p-6 rounded-2xl shadow-lg fade-in">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold text-gray-800">Tạo Bài Học Mới</h2>
-                        <button onclick="renderTeacherDashboard()" class="text-gray-500 hover:text-gray-800">Hủy</button>
-                    </div>
-                    
-                    <input type="text" id="lesson-title" placeholder="Tên bài học (VD: Bài 2: Gia đình)" class="w-full p-3 border border-gray-300 rounded-xl mb-4 focus:ring-2 focus:ring-teal-500 outline-none">
-                    
-                    <!-- EXCEL UPLOAD SECTION -->
-                    <div class="flex items-center gap-4 mb-6 bg-indigo-50 p-3 rounded-xl border border-indigo-100">
-                        <input type="file" id="excel-file" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelUpload(event)">
-                        <button onclick="document.getElementById('excel-file').click()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm transition flex items-center gap-2 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                            </svg>
-                            Nhập từ file Excel
+            appDiv.innerHTML = `
+                ${renderNavbar()}
+                <div class="flex-grow p-4 max-w-4xl mx-auto w-full">
+                    <div class="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 fade-in">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-2xl font-bold text-gray-800">Tạo Bài Học Mới</h2>
+                            <button onclick="renderTeacherDashboard()" class="text-gray-500 hover:text-gray-800 bg-gray-100 px-4 py-2 rounded-lg font-medium">Hủy</button>
+                        </div>
+                        
+                        <input type="text" id="lesson-title" placeholder="Nhập tên bài học (VD: HSK 5 - Bài 1)" class="w-full p-4 border border-gray-300 rounded-xl mb-6 focus:ring-2 focus:ring-teal-500 outline-none text-lg font-medium">
+                        
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                            <div>
+                                <h4 class="font-bold text-indigo-900 mb-1">Nhập nhanh từ Excel</h4>
+                                <p class="text-xs text-indigo-600">Định dạng file: Cột B (Chữ Hán) | Cột C (Pinyin) | Cột D (Nghĩa)</p>
+                            </div>
+                            <input type="file" id="excel-file" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelUpload(event)">
+                            <button onclick="document.getElementById('excel-file').click()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-sm transition whitespace-nowrap">
+                                Chọn File Excel
+                            </button>
+                        </div>
+                        
+                        <div id="word-list" class="space-y-4 mb-6"></div>
+                        
+                        <button onclick="addWordRow()" class="w-full border-2 border-dashed border-teal-300 text-teal-600 font-bold py-4 rounded-xl hover:bg-teal-50 transition mb-6">
+                            + Thêm một từ trống
                         </button>
-                        <span class="text-xs text-indigo-500">
-                            (Định dạng: Cột B: Chữ Hán | Cột C: Pinyin | Cột D: Nghĩa)
-                        </span>
+                        
+                        <button onclick="saveLesson()" class="w-full bg-teal-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-teal-700 transition text-lg">
+                            LƯU BÀI HỌC
+                        </button>
                     </div>
-                    
-                    <div id="word-list" class="space-y-4 mb-6">
-                        <!-- Word rows will go here -->
-                    </div>
-                    
-                    <button onclick="addWordRow()" class="w-full border-2 border-dashed border-teal-300 text-teal-600 font-medium py-3 rounded-xl hover:bg-teal-50 transition mb-6">
-                        + Thêm từ vựng thủ công
-                    </button>
-                    
-                    <button onclick="saveLesson()" class="w-full bg-teal-600 text-white font-bold py-3 rounded-xl shadow hover:bg-teal-700 transition">
-                        Lưu Bài Học
-                    </button>
                 </div>
             `;
-            // Add initial row
             addWordRow();
         }
 
+        // Xử lý đọc file Excel
         function handleExcelUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -204,21 +153,16 @@
                     const workbook = XLSX.read(data, {type: 'array'});
                     const firstSheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[firstSheetName];
-                    
-                    // Convert sheet to a 2D array
                     const json = XLSX.utils.sheet_to_json(worksheet, {header: 1});
                     
                     if (json.length > 1) {
-                        // Xóa các ô trống hiện tại
                         document.getElementById('word-list').innerHTML = '';
-                        
-                        // Bỏ qua dòng 0 (Header). Quét từ dòng 1 trở đi.
                         let addedCount = 0;
                         for (let i = 1; i < json.length; i++) {
                             const row = json[i];
                             if (!row || row.length === 0) continue;
                             
-                            // Dựa theo file HSK.xlsx: Cột 2 (index 1) là Chữ, Cột 3 (index 2) là Pinyin, Cột 4 (index 3) là Nghĩa
+                            // Cột 2 (index 1), Cột 3 (index 2), Cột 4 (index 3)
                             const zh = row[1] ? String(row[1]).trim() : '';
                             const py = row[2] ? String(row[2]).trim() : '';
                             const vi = row[3] ? String(row[3]).trim() : '';
@@ -229,7 +173,6 @@
                             }
                         }
                         
-                        // Tự động điền tên bài học theo tên file nếu chưa có
                         const titleInput = document.getElementById('lesson-title');
                         if (!titleInput.value) {
                             titleInput.value = file.name.replace(/\.[^/.]+$/, "");
@@ -237,14 +180,11 @@
                         
                         alert(`Đã nhập thành công ${addedCount} từ vựng!`);
                     } else {
-                        alert('File Excel trống hoặc không có dữ liệu!');
+                        alert('File Excel trống hoặc không đúng định dạng!');
                     }
                 } catch (error) {
-                    console.error("Lỗi khi đọc file:", error);
-                    alert('Đã xảy ra lỗi khi đọc file Excel. Vui lòng kiểm tra lại định dạng file!');
+                    alert('Lỗi đọc file Excel! Vui lòng thử lại.');
                 }
-                
-                // Reset input để có thể chọn lại cùng 1 file
                 event.target.value = '';
             };
             reader.readAsArrayBuffer(file);
@@ -257,298 +197,216 @@
         function addWordRowWithValue(zh, py, vi) {
             const container = document.getElementById('word-list');
             const row = document.createElement('div');
-            row.className = 'grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-xl word-row';
+            row.className = 'grid grid-cols-1 md:grid-cols-3 gap-3 p-4 bg-gray-50 rounded-xl word-row border border-gray-200';
             row.innerHTML = `
-                <input type="text" placeholder="Chữ Hán (VD: 好)" class="zh-input p-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none w-full" lang="zh-CN">
-                <input type="text" placeholder="Pinyin (VD: hǎo)" class="py-input p-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none w-full">
-                <input type="text" placeholder="Nghĩa (VD: Tốt)" class="vi-input p-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none w-full" lang="vi">
+                <input type="text" placeholder="Chữ Hán (VD: 好)" class="zh-input p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none w-full" lang="zh-CN">
+                <input type="text" placeholder="Pinyin (VD: hǎo)" class="py-input p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none w-full">
+                <input type="text" placeholder="Nghĩa (VD: Tốt)" class="vi-input p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none w-full" lang="vi">
             `;
-            
-            // Set value bằng Javascript để tránh lỗi HTML nếu trong chữ có chứa dấu ngoặc kép ("")
             row.querySelector('.zh-input').value = zh;
             row.querySelector('.py-input').value = py;
             row.querySelector('.vi-input').value = vi;
-            
             container.appendChild(row);
         }
 
         function saveLesson() {
             const title = document.getElementById('lesson-title').value.trim();
-            if (!title) { alert('Vui lòng nhập tên bài học!'); return; }
-
+            if (!title) return alert('Vui lòng nhập tên bài học!');
+            
             const rows = document.querySelectorAll('.word-row');
-            let words = [];
-            let isValid = true;
-
+            const words = [];
             rows.forEach(row => {
                 const zh = row.querySelector('.zh-input').value.trim();
                 const py = row.querySelector('.py-input').value.trim();
                 const vi = row.querySelector('.vi-input').value.trim();
-                
-                if (zh || py || vi) {
-                    if (!zh || !py || !vi) {
-                        isValid = false;
-                        row.classList.add('border', 'border-red-500');
-                    } else {
-                        row.classList.remove('border', 'border-red-500');
-                        words.push({ zh, py, vi });
-                    }
+                if (zh && py && vi) {
+                    words.push({ zh, py, vi });
                 }
             });
 
-            if (!isValid) {
-                alert('Vui lòng điền đầy đủ cả 3 ô cho các từ bạn đã nhập.');
-                return;
-            }
-            if (words.length === 0) {
-                alert('Vui lòng thêm ít nhất 1 từ vựng!');
-                return;
-            }
+            if (words.length === 0) return alert('Bài học phải có ít nhất 1 từ vựng đầy đủ thông tin!');
 
             lessons.push({ id: Date.now(), title, words });
             renderTeacherDashboard();
         }
 
+        // --- GIAO DIỆN SINH VIÊN ---
         function renderStudentDashboard() {
-            let lessonsHtml = lessons.map(l => `
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition cursor-pointer flex flex-col items-center text-center gap-2"
-                     onclick="showPracticeOptions(${l.id})">
-                    <div class="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center text-2xl text-teal-600 mb-2">📚</div>
-                    <h3 class="font-bold text-gray-800">${l.title}</h3>
-                    <p class="text-sm text-gray-500">${l.words.length} từ vựng</p>
-                    <span class="mt-2 text-teal-600 font-medium text-sm">Học ngay &rarr;</span>
-                </div>
-            `).join('');
+            let lessonsHtml = lessons.length === 0 
+                ? '<div class="text-center py-12 text-gray-400"><p>Chưa có bài tập nào được giao.</p></div>'
+                : lessons.map(l => `
+                    <div class="bg-white p-5 rounded-xl border border-gray-200 flex justify-between items-center mb-4 hover:shadow-md hover:border-blue-300 transition cursor-pointer group" onclick="setupExercise(${l.id})">
+                        <div>
+                            <h3 class="font-bold text-gray-800 text-lg group-hover:text-blue-600 transition">${l.title}</h3>
+                            <p class="text-sm text-gray-500 mt-1">${l.words.length} từ vựng</p>
+                        </div>
+                        <span class="bg-blue-50 text-blue-600 font-bold py-2 px-4 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition">Học ngay &rarr;</span>
+                    </div>
+                `).join('');
 
-            contentDiv.innerHTML = `
-                <div class="w-full max-w-3xl fade-in">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Xin chào, Sinh Viên!</h2>
-                    <p class="text-gray-600 mb-8">Chọn một bài học dưới đây để bắt đầu ôn tập.</p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                        ${lessonsHtml.length > 0 ? lessonsHtml : '<p class="col-span-full text-center text-gray-500">Chưa có bài học nào được tạo.</p>'}
+            appDiv.innerHTML = `
+                ${renderNavbar()}
+                <div class="flex-grow p-4 max-w-4xl mx-auto w-full fade-in">
+                    <h2 class="text-2xl font-bold mb-6 text-gray-800">Danh sách bài tập</h2>
+                    <div>
+                        ${lessonsHtml}
                     </div>
                 </div>
             `;
         }
 
-        function showPracticeOptions(lessonId) {
+        function setupExercise(lessonId) {
             const lesson = lessons.find(l => l.id === lessonId);
-            contentDiv.innerHTML = `
-                <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl fade-in text-center">
-                    <button onclick="renderStudentDashboard()" class="text-gray-400 hover:text-gray-800 absolute top-4 left-4">&larr; Quay lại</button>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">${lesson.title}</h2>
-                    <p class="text-gray-500 mb-8">Chọn dữ kiện bạn muốn nhìn thấy để đoán các phần còn lại</p>
-                    
-                    <div class="space-y-4">
-                        <button onclick="startPractice(${lessonId}, 'show-zh')" class="w-full bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-semibold py-4 px-4 rounded-xl transition">
-                            Chữ Hán (Viết Pinyin & Nghĩa)
-                        </button>
-                        <button onclick="startPractice(${lessonId}, 'show-py')" class="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-semibold py-4 px-4 rounded-xl transition">
-                            Pinyin (Viết Chữ Hán & Nghĩa)
-                        </button>
-                        <button onclick="startPractice(${lessonId}, 'show-vi')" class="w-full bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 font-semibold py-4 px-4 rounded-xl transition">
-                            Nghĩa Việt (Viết Chữ Hán & Pinyin)
-                        </button>
+            appDiv.innerHTML = `
+                ${renderNavbar()}
+                <div class="flex-grow p-4 max-w-2xl mx-auto w-full flex flex-col justify-center fade-in">
+                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-center">
+                        <h2 class="text-2xl font-bold mb-2 text-gray-800">Cài đặt luyện tập</h2>
+                        <p class="text-gray-500 mb-8">Bạn muốn hệ thống hiển thị thông tin gì làm câu hỏi?</p>
+                        
+                        <div class="flex flex-col gap-4">
+                            <button onclick="startExercise(${lessonId}, 'zh')" class="p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 font-bold transition text-lg text-gray-700">
+                                Hiển thị Chữ Hán
+                            </button>
+                            <button onclick="startExercise(${lessonId}, 'py')" class="p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 font-bold transition text-lg text-gray-700">
+                                Hiển thị Pinyin
+                            </button>
+                            <button onclick="startExercise(${lessonId}, 'vi')" class="p-4 border-2 border-gray-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 font-bold transition text-lg text-gray-700">
+                                Hiển thị Tiếng Việt
+                            </button>
+                        </div>
+                        
+                        <button onclick="renderStudentDashboard()" class="mt-8 text-gray-400 hover:text-gray-600 font-medium">Quay lại danh sách</button>
                     </div>
                 </div>
             `;
         }
 
-        function startPractice(lessonId, mode) {
-            practiceState = {
-                lesson: lessons.find(l => l.id === lessonId),
-                mode: mode,
-                currentWordIndex: 0,
-                field1Passed: false,
-                field2Passed: false
+        function startExercise(lessonId, hintType) {
+            const lesson = lessons.find(l => l.id === lessonId);
+            currentExercise = {
+                lessonTitle: lesson.title,
+                words: [...lesson.words].sort(() => Math.random() - 0.5), // Xáo trộn từ
+                currentIndex: 0,
+                hintType: hintType
             };
-            renderPracticeUI();
+            renderExercise();
         }
 
-        const pinyinKeyboardHtml = `
-            <div class="mt-2 bg-gray-100 p-2 rounded-lg text-xs flex justify-center gap-1 flex-wrap">
-                <span class="text-gray-500 w-full text-center block mb-1">Thanh điệu Pinyin</span>
-                ${['ā','á','ǎ','à','ē','é','ě','è','ī','í','ǐ','ì','ō','ó','ǒ','ò','ū','ú','ǔ','ù','ǖ','ǘ','ǚ','ǜ'].map(char => 
-                    `<button onclick="insertPinyin('${char}')" class="bg-white px-2 py-1 rounded shadow hover:bg-teal-50">${char}</button>`
-                ).join('')}
-            </div>
-        `;
-
-        let activePinyinInput = null;
-
-        function renderPracticeUI() {
-            const word = practiceState.lesson.words[practiceState.currentWordIndex];
-            if (!word) {
-                // Finished
-                contentDiv.innerHTML = `
-                    <div class="bg-white p-8 rounded-2xl shadow-xl text-center fade-in max-w-md w-full">
-                        <div class="text-6xl mb-4">🎉</div>
-                        <h2 class="text-2xl font-bold text-teal-600 mb-2">Chúc mừng!</h2>
-                        <p class="text-gray-600 mb-6">Bạn đã hoàn thành bài tập.</p>
-                        <button onclick="renderStudentDashboard()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-xl shadow transition">Quay về trang chủ</button>
+        function renderExercise() {
+            if (currentExercise.currentIndex >= currentExercise.words.length) {
+                appDiv.innerHTML = `
+                    ${renderNavbar()}
+                    <div class="flex-grow flex items-center justify-center p-4">
+                        <div class="bg-white p-8 rounded-3xl shadow-lg text-center max-w-sm w-full fade-in border border-green-100">
+                            <div class="text-6xl mb-6">🏆</div>
+                            <h2 class="text-2xl font-bold text-teal-600 mb-2">Tuyệt vời!</h2>
+                            <p class="text-gray-600 mb-8">Bạn đã hoàn thành bài: <strong>${currentExercise.lessonTitle}</strong></p>
+                            <button onclick="renderStudentDashboard()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 shadow-md transition text-lg">Hoàn tất</button>
+                        </div>
                     </div>
                 `;
                 return;
             }
 
-            let clueHtml = '';
-            let inputsHtml = '';
+            const word = currentExercise.words[currentExercise.currentIndex];
+            const hintType = currentExercise.hintType;
             
-            // Removing the keyboard note html variable
+            let hintDisplay = '';
+            let inputsHtml = '';
 
-            if (practiceState.mode === 'show-zh') {
-                clueHtml = `<div class="text-6xl font-bold text-gray-800 mb-2">${word.zh}</div><div class="text-gray-400 text-sm mb-6">Chữ Hán</div>`;
+            if (hintType === 'zh') {
+                hintDisplay = `<div class="text-6xl font-bold text-gray-800 mb-3">${word.zh}</div><div class="text-sm font-medium text-gray-400 tracking-widest uppercase">Chữ Hán</div>`;
                 inputsHtml = `
-                    <div class="space-y-4 text-left">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nhập Pinyin</label>
-                            <input type="text" id="input-py" onfocus="activePinyinInput=this" class="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-teal-500 focus:ring-0 outline-none text-lg transition-colors" placeholder="Ví dụ: nǐ hǎo" autocomplete="off">
-                            ${pinyinKeyboardHtml}
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nhập Nghĩa Tiếng Việt</label>
-                            <input type="text" id="input-vi" lang="vi" class="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-teal-500 focus:ring-0 outline-none text-lg transition-colors" placeholder="Ví dụ: xin chào" autocomplete="off">
-                        </div>
-                    </div>
+                    <input type="text" id="ans-py" placeholder="Nhập Pinyin..." class="w-full p-4 border-2 border-gray-200 rounded-xl text-center text-xl font-medium focus:border-blue-500 focus:outline-none transition mb-4">
+                    <input type="text" id="ans-vi" placeholder="Nhập Nghĩa tiếng Việt..." class="w-full p-4 border-2 border-gray-200 rounded-xl text-center text-xl font-medium focus:border-blue-500 focus:outline-none transition" lang="vi">
                 `;
-            } else if (practiceState.mode === 'show-py') {
-                clueHtml = `<div class="text-4xl font-bold text-blue-600 mb-2">${word.py}</div><div class="text-gray-400 text-sm mb-6">Pinyin</div>`;
+            } else if (hintType === 'py') {
+                hintDisplay = `<div class="text-5xl font-bold text-blue-600 mb-3">${word.py}</div><div class="text-sm font-medium text-gray-400 tracking-widest uppercase">Pinyin</div>`;
                 inputsHtml = `
-                    <div class="space-y-4 text-left">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nhập Chữ Hán (Dùng bàn phím tiếng Trung)</label>
-                            <input type="text" id="input-zh" lang="zh-CN" class="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-teal-500 focus:ring-0 outline-none text-lg transition-colors" placeholder="Ví dụ: 你好" autocomplete="off">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nhập Nghĩa Tiếng Việt</label>
-                            <input type="text" id="input-vi" lang="vi" class="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-teal-500 focus:ring-0 outline-none text-lg transition-colors" placeholder="Ví dụ: xin chào" autocomplete="off">
-                        </div>
-                    </div>
+                    <input type="text" id="ans-zh" placeholder="Nhập Chữ Hán..." class="w-full p-4 border-2 border-gray-200 rounded-xl text-center text-xl font-medium focus:border-blue-500 focus:outline-none transition mb-4" lang="zh-CN">
+                    <input type="text" id="ans-vi" placeholder="Nhập Nghĩa tiếng Việt..." class="w-full p-4 border-2 border-gray-200 rounded-xl text-center text-xl font-medium focus:border-blue-500 focus:outline-none transition" lang="vi">
                 `;
-            } else if (practiceState.mode === 'show-vi') {
-                clueHtml = `<div class="text-3xl font-bold text-green-600 mb-2">${word.vi}</div><div class="text-gray-400 text-sm mb-6">Tiếng Việt</div>`;
+            } else if (hintType === 'vi') {
+                hintDisplay = `<div class="text-4xl font-bold text-teal-600 mb-3">${word.vi}</div><div class="text-sm font-medium text-gray-400 tracking-widest uppercase">Nghĩa Tiếng Việt</div>`;
                 inputsHtml = `
-                    <div class="space-y-4 text-left">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nhập Chữ Hán (Dùng bàn phím tiếng Trung)</label>
-                            <input type="text" id="input-zh" lang="zh-CN" class="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-teal-500 focus:ring-0 outline-none text-lg transition-colors" placeholder="Ví dụ: 你好" autocomplete="off">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Nhập Pinyin</label>
-                            <input type="text" id="input-py" onfocus="activePinyinInput=this" class="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-teal-500 focus:ring-0 outline-none text-lg transition-colors" placeholder="Ví dụ: nǐ hǎo" autocomplete="off">
-                            ${pinyinKeyboardHtml}
-                        </div>
-                    </div>
+                    <input type="text" id="ans-zh" placeholder="Nhập Chữ Hán..." class="w-full p-4 border-2 border-gray-200 rounded-xl text-center text-xl font-medium focus:border-blue-500 focus:outline-none transition mb-4" lang="zh-CN">
+                    <input type="text" id="ans-py" placeholder="Nhập Pinyin..." class="w-full p-4 border-2 border-gray-200 rounded-xl text-center text-xl font-medium focus:border-blue-500 focus:outline-none transition">
                 `;
             }
 
-            contentDiv.innerHTML = `
-                <div class="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl fade-in text-center relative">
-                    <div class="absolute top-4 right-4 text-sm font-bold text-gray-400">
-                        ${practiceState.currentWordIndex + 1} / ${practiceState.lesson.words.length}
+            appDiv.innerHTML = `
+                ${renderNavbar()}
+                <div class="flex-grow p-4 max-w-xl mx-auto w-full flex flex-col pt-8 md:pt-16">
+                    <div class="flex justify-between items-center mb-6 px-2">
+                        <div class="bg-gray-200 rounded-full h-2 w-full max-w-[200px] overflow-hidden">
+                            <div class="bg-blue-500 h-full" style="width: ${(currentExercise.currentIndex / currentExercise.words.length) * 100}%"></div>
+                        </div>
+                        <span class="text-gray-500 font-bold ml-4">${currentExercise.currentIndex + 1} / ${currentExercise.words.length}</span>
                     </div>
-                    <button onclick="renderStudentDashboard()" class="text-gray-400 hover:text-gray-800 absolute top-4 left-4">&larr; Thoát</button>
                     
-                    <div class="mt-8 mb-6">
-                        ${clueHtml}
+                    <div class="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-gray-100 text-center mb-6 fade-in">
+                        <div class="mb-10">
+                            ${hintDisplay}
+                        </div>
+                        <div class="space-y-2">
+                            ${inputsHtml}
+                        </div>
                     </div>
                     
-                    ${inputsHtml}
-                    
-                    <button id="check-btn" onclick="checkAnswers()" class="w-full mt-6 bg-teal-600 text-white font-bold py-4 rounded-xl shadow hover:bg-teal-700 transition">
-                        Kiểm Tra
-                    </button>
+                    <div class="flex gap-4">
+                        <button onclick="renderStudentDashboard()" class="px-6 py-4 rounded-2xl font-bold text-gray-500 bg-gray-200 hover:bg-gray-300 transition">Thoát</button>
+                        <button onclick="checkAnswer()" class="flex-grow bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-blue-700 transition text-xl">Kiểm tra</button>
+                    </div>
                 </div>
             `;
-
-            // Reset states
-            practiceState.field1Passed = false;
-            practiceState.field2Passed = false;
-            activePinyinInput = null;
-
-            // Setup Enter key listeners
-            const inputs = document.querySelectorAll('input[type="text"]');
-            inputs.forEach(input => {
-                input.addEventListener('keypress', function (e) {
-                    if (e.key === 'Enter') {
-                        checkAnswers();
-                    }
-                });
-            });
-            // Auto focus first input
-            if(inputs.length > 0) inputs[0].focus();
         }
 
-        function insertPinyin(char) {
-            if (activePinyinInput) {
-                activePinyinInput.value += char;
-                activePinyinInput.focus();
-            }
-        }
+        function checkAnswer() {
+            const word = currentExercise.words[currentExercise.currentIndex];
+            const hintType = currentExercise.hintType;
+            let isCorrect = true;
 
-        function checkAnswers() {
-            const word = practiceState.lesson.words[practiceState.currentWordIndex];
-            
-            let i1, i2, correct1, correct2;
-
-            if (practiceState.mode === 'show-zh') {
-                i1 = document.getElementById('input-py'); correct1 = word.py;
-                i2 = document.getElementById('input-vi'); correct2 = word.vi;
-            } else if (practiceState.mode === 'show-py') {
-                i1 = document.getElementById('input-zh'); correct1 = word.zh;
-                i2 = document.getElementById('input-vi'); correct2 = word.vi;
-            } else {
-                i1 = document.getElementById('input-zh'); correct1 = word.zh;
-                i2 = document.getElementById('input-py'); correct2 = word.py;
-            }
-
-            // Function to validate individual field
-            const validateField = (inputEl, correctValue, passedRef) => {
-                // Ignore spaces and case for checking
-                const val = inputEl.value.replace(/\s+/g, '').toLowerCase();
-                const target = correctValue.replace(/\s+/g, '').toLowerCase();
-
-                // Reset classes
-                inputEl.classList.remove('border-gray-300', 'border-red-500', 'bg-red-50', 'border-green-500', 'bg-green-50', 'shake');
+            const checkField = (id, correctVal) => {
+                const input = document.getElementById(id);
+                if (!input) return;
                 
-                // Trigger reflow to restart animation if needed
-                void inputEl.offsetWidth;
-
-                if (val === target) {
-                    inputEl.classList.add('border-green-500', 'bg-green-50', 'text-green-800');
-                    inputEl.readOnly = true;
-                    return true;
+                // Chuẩn hóa chuỗi (bỏ khoảng trắng 2 đầu, chuyển chữ thường)
+                const userVal = input.value.trim().toLowerCase();
+                const expectedVal = correctVal.trim().toLowerCase();
+                
+                if (userVal === expectedVal) {
+                    input.classList.remove('border-gray-200', 'border-red-500', 'text-red-600');
+                    input.classList.add('border-green-500', 'bg-green-50', 'text-green-700');
                 } else {
-                    inputEl.classList.add('border-red-500', 'bg-red-50', 'text-red-800', 'shake');
-                    // Xóa đi nếu viết sai sau 0.8s để người dùng thấy họ sai
-                    setTimeout(() => {
-                        inputEl.value = '';
-                        inputEl.classList.remove('border-red-500', 'bg-red-50', 'text-red-800');
-                        inputEl.classList.add('border-gray-300');
-                        if (!practiceState.field1Passed && !practiceState.field2Passed) inputEl.focus();
-                    }, 800);
-                    return false;
+                    input.classList.remove('border-gray-200', 'border-green-500', 'bg-green-50', 'text-green-700');
+                    input.classList.add('border-red-500', 'text-red-600');
+                    input.value = ''; // Xóa chữ sai theo yêu cầu
+                    isCorrect = false;
                 }
             };
 
-            if (!practiceState.field1Passed) practiceState.field1Passed = validateField(i1, correct1, 'field1Passed');
-            if (!practiceState.field2Passed) practiceState.field2Passed = validateField(i2, correct2, 'field2Passed');
+            if (hintType === 'zh') {
+                checkField('ans-py', word.py);
+                checkField('ans-vi', word.vi);
+            } else if (hintType === 'py') {
+                checkField('ans-zh', word.zh);
+                checkField('ans-vi', word.vi);
+            } else if (hintType === 'vi') {
+                checkField('ans-zh', word.zh);
+                checkField('ans-py', word.py);
+            }
 
-            if (practiceState.field1Passed && practiceState.field2Passed) {
-                const btn = document.getElementById('check-btn');
-                btn.textContent = 'Chính xác! Tiếp tục...';
-                btn.classList.replace('bg-teal-600', 'bg-green-500');
-                btn.classList.replace('hover:bg-teal-700', 'hover:bg-green-600');
-                
+            if (isCorrect) {
                 setTimeout(() => {
-                    practiceState.currentWordIndex++;
-                    renderPracticeUI();
-                }, 1200);
+                    currentExercise.currentIndex++;
+                    renderExercise();
+                }, 800);
             }
         }
 
-        // Initialize App
-        render();
+        // --- KHỞI CHẠY ---
+        renderApp();
     </script>
 </body>
 </html>
