@@ -3,111 +3,386 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Hệ thống Học tập</title>
+  <title>Hệ thống Học tập Tiếng Trung</title>
   
-  <script type="module" crossorigin src="/assets/index-bb584c6b.js"></script>
-  <link rel="stylesheet" href="/assets/index-84e8adec.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <style>
+    /* Hiệu ứng nền chuyển động */
+    .animated-bg {
+      background: linear-gradient(-45deg, #e0f2fe, #f3e8ff, #dbeafe, #fce7f3);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    /* Hiệu ứng chuyển cảnh mượt mà */
+    .page-section {
+      transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    }
+    .page-section.hidden {
+      display: none !important;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    .page-section:not(.hidden) {
+      animation: pageEnter 0.5s forwards;
+    }
+    @keyframes pageEnter {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Hiệu ứng rung lắc khi nhập sai */
+    .shake {
+      animation: shakeError 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    @keyframes shakeError {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+  </style>
 </head>
 <body class="animated-bg min-h-screen font-sans text-gray-800">
   
-  <!-- Thanh điều hướng (ẩn ở trang đăng nhập) -->
   <nav id="navbar" class="hidden bg-white/80 backdrop-blur-md shadow-md p-4 sticky top-0 z-50">
     <div class="max-w-4xl mx-auto flex justify-between items-center">
       <h1 class="text-xl font-bold text-blue-600">Hệ thống Học tập</h1>
-      <button id="btn-switch-role" class="text-sm font-medium text-gray-600 hover:text-blue-500 transition-colors">🔄 Đổi Vai Trò</button>
+      <button id="btn-switch-role" class="text-sm font-medium text-gray-600 hover:text-blue-500 transition-colors bg-gray-100 px-3 py-1.5 rounded-lg active:scale-95 transition-all">🔄 Đổi Vai Trò</button>
     </div>
   </nav>
 
-  <main id="app" class="max-w-4xl mx-auto p-4 flex justify-center items-center min-h-[80vh]">
+  <main id="app" class="max-w-4xl mx-auto p-4 flex justify-center items-center min-h-[85vh]">
     
-    <!-- Trang Đăng nhập -->
     <div id="page-login" class="page-section bg-white p-8 rounded-2xl shadow-xl text-center w-full max-w-sm">
       <h2 class="text-2xl font-bold mb-6">Đăng nhập</h2>
       <button id="btn-google-login" class="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-3 hover:bg-gray-50 hover:shadow-md transition-all active:scale-95">
         <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6" alt="Google">
-        <span>Đăng nhập bằng Google</span>
+        <span class="font-medium">Đăng nhập bằng Google</span>
       </button>
     </div>
 
-    <!-- Trang Chọn Vai Trò -->
     <div id="page-role" class="page-section hidden w-full max-w-md">
-      <h2 class="text-2xl font-bold mb-6 text-center text-white drop-shadow-md">Bạn là ai?</h2>
+      <h2 class="text-2xl font-bold mb-6 text-center text-gray-800 drop-shadow-sm">Bạn là ai?</h2>
       <div class="grid grid-cols-2 gap-4">
-        <button id="role-teacher" class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all flex flex-col items-center gap-3 group">
-          <span class="text-4xl group-hover:scale-110 transition-transform">👨‍🏫</span>
-          <span class="font-semibold text-lg">Giảng viên</span>
+        <button id="role-teacher" class="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center gap-3 group active:scale-95">
+          <span class="text-5xl group-hover:scale-110 transition-transform">👨‍🏫</span>
+          <span class="font-semibold text-base text-gray-700">Giảng viên</span>
         </button>
-        <button id="role-student" class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all flex flex-col items-center gap-3 group">
-          <span class="text-4xl group-hover:scale-110 transition-transform">🎓</span>
-          <span class="font-semibold text-lg">Sinh viên</span>
+        <button id="role-student" class="bg-white p-6 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center gap-3 group active:scale-95">
+          <span class="text-5xl group-hover:scale-110 transition-transform">🎓</span>
+          <span class="font-semibold text-base text-gray-700">Sinh viên</span>
         </button>
       </div>
     </div>
 
-    <!-- Trang Giảng Viên -->
-    <div id="page-teacher" class="page-section hidden w-full bg-white/95 p-6 md:p-8 rounded-2xl shadow-xl">
+    <div id="page-teacher" class="page-section hidden w-full bg-white/95 p-5 md:p-8 rounded-2xl shadow-xl">
       <h2 class="text-2xl font-bold mb-4 text-blue-600">Thêm Bài Tập Mới</h2>
       
-      <!-- Upload Excel -->
-      <div class="mb-6 border-2 border-dashed border-blue-300 p-6 rounded-xl text-center bg-blue-50">
-        <p class="mb-2 text-sm text-gray-600">Tải lên file Excel. File hợp lệ phải chứa chính xác các cột: <b>Từ mới, Phiên âm, Nghĩa</b>.</p>
-        <input type="file" id="excel-upload" title="Tải lên file Excel" accept=".xlsx, .xls" class="block w-full text-sm..." />
+      <div class="mb-6 border-2 border-dashed border-blue-300 p-5 rounded-xl text-center bg-blue-50/50">
+        <p class="mb-2 text-xs md:text-sm text-gray-600">Tải lên file Excel (.xlsx). Các cột bắt buộc: <b class="text-blue-600">Từ mới, Phiên âm, Nghĩa</b> (Không thêm cột khác).</p>
+        <input type="file" id="excel-upload" title="Chọn file excel" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer"/>
       </div>
 
-      <!-- Thêm thủ công -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <input type="text" id="input-tumoi" placeholder="Từ mới" class="border rounded-lg p-3 focus:ring-2 focus:ring-blue-400 outline-none transition-all">
-        <input type="text" id="input-phienam" placeholder="Phiên âm" class="border rounded-lg p-3 focus:ring-2 focus:ring-blue-400 outline-none transition-all">
-        <input type="text" id="input-nghia" placeholder="Nghĩa" class="border rounded-lg p-3 focus:ring-2 focus:ring-blue-400 outline-none transition-all">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+        <input type="text" id="input-tumoi" placeholder="Từ mới" class="border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition-all">
+        <input type="text" id="input-phienam" placeholder="Phiên âm" class="border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition-all">
+        <input type="text" id="input-nghia" placeholder="Nghĩa" class="border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition-all">
       </div>
-      <button id="btn-add-word" class="w-full md:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 active:scale-95 transition-all mb-6">Thêm từ</button>
+      <button id="btn-add-word" class="w-full md:w-auto bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 active:scale-95 transition-all mb-6 text-sm font-medium">Thêm từ</button>
 
-      <!-- Danh sách từ đang tạo -->
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
+      <div class="overflow-x-auto max-h-60 border rounded-lg shadow-inner bg-gray-50">
+        <table class="w-full text-left border-collapse text-sm">
           <thead>
-            <tr class="bg-gray-100"><th class="p-3">Từ mới</th><th class="p-3">Phiên âm</th><th class="p-3">Nghĩa</th></tr>
+            <tr class="bg-gray-100 sticky top-0 shadow-sm"><th class="p-3">Từ mới</th><th class="p-3">Phiên âm</th><th class="p-3">Nghĩa</th></tr>
           </thead>
-          <tbody id="teacher-word-list"></tbody>
+          <tbody id="teacher-word-list" class="divide-y bg-white"></tbody>
         </table>
       </div>
-      <button id="btn-save-exercise" class="mt-6 w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 active:scale-95 transition-all shadow-lg">Lưu Bài Tập</button>
+      <button id="btn-save-exercise" class="mt-6 w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 active:scale-95 transition-all shadow-md">Lưu Toàn Bộ Bài Tập</button>
     </div>
 
-    <!-- Trang Sinh Viên: Danh sách bài tập -->
     <div id="page-student-list" class="page-section hidden w-full">
-      <h2 class="text-2xl font-bold mb-6 text-white drop-shadow-md text-center">Danh sách Bài tập</h2>
-      <div id="exercise-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Render bằng JS -->
-      </div>
+      <h2 class="text-2xl font-bold mb-6 text-gray-800 drop-shadow-sm text-center">Danh sách Bài tập</h2>
+      <div id="exercise-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
     </div>
 
-    <!-- Trang Sinh Viên: Làm bài -->
-    <div id="page-student-quiz" class="page-section hidden w-full bg-white p-6 md:p-8 rounded-2xl shadow-xl max-w-2xl mx-auto">
-      <button id="btn-back-exercises" class="text-gray-500 hover:text-gray-800 mb-4 inline-block font-medium">← Quay lại danh sách</button>
+    <div id="page-student-quiz" class="page-section hidden w-full bg-white p-5 md:p-8 rounded-2xl shadow-xl max-w-2xl mx-auto">
+      <button id="btn-back-exercises" class="text-gray-500 hover:text-gray-800 mb-4 inline-block font-medium text-sm transition-colors">← Quay lại danh sách</button>
       
-      <div id="quiz-setup" class="mb-6 bg-gray-50 p-4 rounded-xl">
-        <h3 class="font-bold mb-3">Chọn thông tin gợi ý:</h3>
-        <div class="flex gap-4">
-          <label class="cursor-pointer flex items-center gap-2"><input type="radio" name="prompt_type" value="tumoi" checked> Từ mới</label>
-          <label class="cursor-pointer flex items-center gap-2"><input type="radio" name="prompt_type" value="phienam"> Phiên âm</label>
-          <label class="cursor-pointer flex items-center gap-2"><input type="radio" name="prompt_type" value="nghia"> Nghĩa</label>
+      <div id="quiz-setup" class="mb-6 bg-gray-50 p-4 rounded-xl border">
+        <h3 class="font-bold mb-3 text-gray-700 text-sm">Chọn thông tin làm từ gợi ý:</h3>
+        <div class="flex flex-wrap gap-4 text-sm">
+          <label class="cursor-pointer flex items-center gap-2 font-medium"><input type="radio" name="prompt_type" value="tumoi" checked class="w-4 h-4 text-blue-600"> Từ mới</label>
+          <label class="cursor-pointer flex items-center gap-2 font-medium"><input type="radio" name="prompt_type" value="phienam" class="w-4 h-4 text-blue-600"> Phiên âm</label>
+          <label class="cursor-pointer flex items-center gap-2 font-medium"><input type="radio" name="prompt_type" value="nghia" class="w-4 h-4 text-blue-600"> Nghĩa</label>
         </div>
-        <button id="btn-start-quiz" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all">Bắt đầu làm</button>
+        <button id="btn-start-quiz" class="mt-4 w-full sm:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-all active:scale-95 text-sm">Bắt đầu làm bài</button>
       </div>
 
       <div id="quiz-area" class="hidden text-center">
-        <div class="mb-2 text-sm text-gray-500 font-bold" id="quiz-progress">Từ 1 / 10</div>
-        <div class="text-5xl font-bold text-blue-600 mb-8 py-8 border-b-2" id="quiz-prompt">---</div>
+        <div class="mb-2 text-xs md:text-sm text-gray-400 font-bold tracking-wider uppercase" id="quiz-progress">Từ 1 / 10</div>
+        <div class="text-4xl md:text-5xl font-bold text-blue-600 mb-8 py-6 border-b border-gray-100" id="quiz-prompt">---</div>
         
-        <div class="grid grid-cols-1 gap-4 max-w-sm mx-auto" id="quiz-inputs-container">
-          <!-- Render inputs bằng JS -->
-        </div>
+        <div class="grid grid-cols-1 gap-4 max-w-sm mx-auto" id="quiz-inputs-container"></div>
       </div>
     </div>
 
   </main>
 
-  
+  <script>
+    // --- KHỞI TẠO TRẠNG THÁI ---
+    let currentExercise = []; 
+    let savedExercises = JSON.parse(localStorage.getItem('exercises')) || [];
+    let activeQuiz = null; 
+    let quizCurrentIndex = 0;
+    let quizPromptType = 'tumoi'; 
+
+    const pages = {
+      login: document.getElementById('page-login'),
+      role: document.getElementById('page-role'),
+      teacher: document.getElementById('page-teacher'),
+      studentList: document.getElementById('page-student-list'),
+      studentQuiz: document.getElementById('page-student-quiz')
+    };
+
+    function showPage(pageId) {
+      Object.values(pages).forEach(p => p.classList.add('hidden'));
+      pages[pageId].classList.remove('hidden');
+      
+      const nav = document.getElementById('navbar');
+      if (pageId === 'login') nav.classList.add('hidden');
+      else nav.classList.remove('hidden');
+    }
+
+    // --- XỬ LÝ ĐĂNG NHẬP & LINK ĐỔI VAI TRÒ ---
+    document.getElementById('btn-google-login').addEventListener('click', () => showPage('role'));
+    document.getElementById('btn-switch-role').addEventListener('click', () => showPage('role'));
+
+    document.getElementById('role-teacher').addEventListener('click', () => {
+      currentExercise = [];
+      renderTeacherList();
+      showPage('teacher');
+    });
+
+    document.getElementById('role-student').addEventListener('click', () => {
+      renderStudentExercises();
+      showPage('studentList');
+    });
+
+    // --- GIAO DIỆN GIẢNG VIÊN ---
+    const tbody = document.getElementById('teacher-word-list');
+
+    function renderTeacherList() {
+      tbody.innerHTML = currentExercise.map(word => `
+        <tr class="hover:bg-gray-50 transition-colors">
+          <td class="p-3 font-semibold text-gray-800">${word.tumoi}</td>
+          <td class="p-3 text-gray-600">${word.phienam}</td>
+          <td class="p-3 text-gray-600">${word.nghia}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Thêm từ thủ công
+    document.getElementById('btn-add-word').addEventListener('click', () => {
+      const tumoi = document.getElementById('input-tumoi').value.trim();
+      const phienam = document.getElementById('input-phienam').value.trim();
+      const nghia = document.getElementById('input-nghia').value.trim();
+
+      if (tumoi && phienam && nghia) {
+        currentExercise.push({ tumoi, phienam, nghia });
+        renderTeacherList();
+        document.getElementById('input-tumoi').value = '';
+        document.getElementById('input-phienam').value = '';
+        document.getElementById('input-nghia').value = '';
+      } else {
+        alert("Vui lòng điền đầy đủ cả 3 ô thông tin!");
+      }
+    });
+
+    // Xử lý đọc file Excel theo luật nghiêm ngặt
+    document.getElementById('excel-upload').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        const data = new Uint8Array(evt.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+        let headerRowIdx = -1;
+        let colMap = { tumoi: -1, phienam: -1, nghia: -1 };
+
+        for (let i = 0; i < json.length; i++) {
+          const row = json[i];
+          let tM = -1, pA = -1, ng = -1;
+          let hasExtra = false;
+
+          row.forEach((cell, idx) => {
+            const val = String(cell || "").trim();
+            if (val === "Từ mới") tM = idx;
+            else if (val === "Phiên âm") pA = idx;
+            else if (val === "Nghĩa") ng = idx;
+            else if (val !== "") hasExtra = true; 
+          });
+
+          if (tM !== -1 && pA !== -1 && ng !== -1 && !hasExtra) {
+            headerRowIdx = i;
+            colMap = { tumoi: tM, phienam: pA, nghia: ng };
+            break;
+          }
+        }
+
+        if (headerRowIdx !== -1) {
+          for (let i = headerRowIdx + 1; i < json.length; i++) {
+            const row = json[i];
+            if (row[colMap.tumoi]) {
+              currentExercise.push({
+                tumoi: String(row[colMap.tumoi] || "").trim(),
+                phienam: String(row[colMap.phienam] || "").trim(),
+                nghia: String(row[colMap.nghia] || "").trim()
+              });
+            }
+          }
+          renderTeacherList();
+          alert("Tải dữ liệu từ file Excel thành công!");
+        } else {
+          alert("LỖI: File Excel không hợp lệ! Header chỉ được chứa đúng 3 cột 'Từ mới', 'Phiên âm', 'Nghĩa', không được thừa cột khác.");
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      e.target.value = ''; 
+    });
+
+    // Lưu bài tập
+    document.getElementById('btn-save-exercise').addEventListener('click', () => {
+      if (currentExercise.length === 0) return alert("Bài tập hiện tại chưa có từ nào!");
+      savedExercises.push({
+        id: Date.now(),
+        date: new Date().toLocaleDateString('vi-VN'),
+        words: [...currentExercise]
+      });
+      localStorage.setItem('exercises', JSON.stringify(savedExercises));
+      currentExercise = [];
+      renderTeacherList();
+      alert("Đã lưu bài tập thành công vào hệ thống!");
+    });
+
+    // --- GIAO DIỆN SINH VIÊN ---
+    function renderStudentExercises() {
+      const container = document.getElementById('exercise-list');
+      if (savedExercises.length === 0) {
+        container.innerHTML = `<p class="col-span-full text-center text-gray-500 bg-white p-6 rounded-xl border">Hiện tại chưa có bài tập nào do Giảng viên đăng tải.</p>`;
+        return;
+      }
+      container.innerHTML = savedExercises.map((ex, idx) => `
+        <div class="bg-white p-5 rounded-xl shadow border border-gray-100 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-blue-400 transition-all active:scale-95" onclick="openQuiz(${idx})">
+          <h3 class="font-bold text-lg text-blue-600">Bài tập số ${idx + 1}</h3>
+          <p class="text-xs text-gray-400 mt-2">Tổng số từ: ${ex.words.length} từ | Ngày tạo: ${ex.date}</p>
+        </div>
+      `).join('');
+    }
+
+    window.openQuiz = (idx) => {
+      activeQuiz = savedExercises[idx].words;
+      document.getElementById('quiz-area').classList.add('hidden');
+      document.getElementById('quiz-setup').classList.remove('hidden');
+      showPage('studentQuiz');
+    };
+
+    document.getElementById('btn-back-exercises').addEventListener('click', () => showPage('studentList'));
+
+    document.getElementById('btn-start-quiz').addEventListener('click', () => {
+      quizPromptType = document.querySelector('input[name="prompt_type"]:checked').value;
+      quizCurrentIndex = 0;
+      document.getElementById('quiz-setup').classList.add('hidden');
+      document.getElementById('quiz-area').classList.remove('hidden');
+      loadQuizWord();
+    });
+
+    function loadQuizWord() {
+      if (quizCurrentIndex >= activeQuiz.length) {
+        alert("🎉 Chúc mừng! Bạn đã hoàn thành xuất sắc toàn bộ bài tập này.");
+        showPage('studentList');
+        return;
+      }
+
+      const word = activeQuiz[quizCurrentIndex];
+      document.getElementById('quiz-progress').innerText = `Từ ${quizCurrentIndex + 1} / ${activeQuiz.length}`;
+      document.getElementById('quiz-prompt').innerText = word[quizPromptType];
+
+      const inputContainer = document.getElementById('quiz-inputs-container');
+      inputContainer.innerHTML = '';
+
+      const fields = [
+        { key: 'tumoi', label: 'Từ mới' },
+        { key: 'phienam', label: 'Phiên âm' },
+        { key: 'nghia', label: 'Nghĩa' }
+      ].filter(f => f.key !== quizPromptType);
+
+      fields.forEach(field => {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = `Nhập đúng ${field.label}`;
+        input.dataset.key = field.key;
+        input.dataset.correct = word[field.key];
+        input.className = "quiz-input border-2 p-3.5 rounded-xl text-base text-center outline-none focus:border-blue-400 transition-all font-semibold shadow-sm bg-gray-50";
+        
+        input.addEventListener('change', checkInput);
+        inputContainer.appendChild(input);
+      });
+      
+      setTimeout(() => {
+        const firstInp = inputContainer.querySelector('input');
+        if(firstInp) firstInp.focus();
+      }, 100);
+    }
+
+    function checkInput(e) {
+      const input = e.target;
+      const correctVal = input.dataset.correct.toLowerCase().trim();
+      const userVal = input.value.toLowerCase().trim();
+
+      if (userVal === correctVal) {
+        input.classList.remove('border-red-500', 'text-red-500', 'shake');
+        input.classList.add('border-green-500', 'text-green-600', 'bg-green-50');
+        input.disabled = true;
+        checkAllDone();
+      } else if (userVal !== '') {
+        // Sai luật: Báo đỏ + Rung lắc + Tự động xóa từ đó đi sau 0.4 giây
+        input.classList.add('border-red-500', 'text-red-500', 'shake');
+        setTimeout(() => {
+          input.value = '';
+          input.classList.remove('shake');
+        }, 400);
+      }
+    }
+
+    function checkAllDone() {
+      const inputs = document.querySelectorAll('.quiz-input');
+      const allCorrect = Array.from(inputs).every(inp => inp.disabled);
+      
+      if (allCorrect) {
+        setTimeout(() => {
+          quizCurrentIndex++;
+          loadQuizWord();
+        }, 800); 
+      }
+    }
+
+    // Trang mặc định khi mở ứng dụng
+    showPage('login');
+  </script>
 </body>
 </html>
