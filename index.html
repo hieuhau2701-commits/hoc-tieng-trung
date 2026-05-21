@@ -10,7 +10,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <style>
-    /* Hiệu ứng nền chuyển động */
+    /* Hiệu ứng nền chuyển động mượt mà */
     .animated-bg {
       background: linear-gradient(-45deg, #e0f2fe, #f3e8ff, #dbeafe, #fce7f3);
       background-size: 400% 400%;
@@ -22,7 +22,7 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* Hiệu ứng chuyển cảnh mượt mà */
+    /* Hiệu ứng chuyển cảnh giữa các trang */
     .page-section {
       transition: opacity 0.4s ease-out, transform 0.4s ease-out;
     }
@@ -39,7 +39,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Hiệu ứng rung lắc khi nhập sai */
+    /* Hiệu ứng rung lắc khi nhập câu trả lời sai */
     .shake {
       animation: shakeError 0.4s cubic-bezier(.36,.07,.19,.97) both;
     }
@@ -55,8 +55,8 @@
   
   <nav id="navbar" class="hidden bg-white/80 backdrop-blur-md shadow-md p-4 sticky top-0 z-50">
     <div class="max-w-4xl mx-auto flex justify-between items-center">
-      <h1 class="text-xl font-bold text-blue-600">Hệ thống Học tập</h1>
-      <button id="btn-switch-role" class="text-sm font-medium text-gray-600 hover:text-blue-500 transition-colors bg-gray-100 px-3 py-1.5 rounded-lg active:scale-95 transition-all">🔄 Đổi Vai Trò</button>
+      <h1 class="text-xl font-bold text-blue-600">Hệ thống Học tập Tiếng Trung</h1>
+      <button id="btn-switch-role" class="text-sm font-medium text-gray-600 hover:text-blue-500 bg-gray-100 px-3 py-1.5 rounded-lg active:scale-95 transition-all">🔄 Đổi Vai Trò</button>
     </div>
   </nav>
 
@@ -88,7 +88,7 @@
       <h2 class="text-2xl font-bold mb-4 text-blue-600">Thêm Bài Tập Mới</h2>
       
       <div class="mb-6 border-2 border-dashed border-blue-300 p-5 rounded-xl text-center bg-blue-50/50">
-        <p class="mb-2 text-xs md:text-sm text-gray-600">Tải lên file Excel (.xlsx). Các cột bắt buộc: <b class="text-blue-600">Từ mới, Phiên âm, Nghĩa</b> (Không thêm cột khác).</p>
+        <p class="mb-2 text-xs md:text-sm text-gray-600">Tải lên file Excel (.xlsx). Hệ thống sẽ tự động tìm và trích xuất dữ liệu từ các cột <b class="text-blue-600">Từ mới</b>, <b class="text-blue-600">Phiên âm</b>, <b class="text-blue-600">Nghĩa</b>.</p>
         <input type="file" id="excel-upload" title="Chọn file excel" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer"/>
       </div>
 
@@ -119,7 +119,7 @@
       <button id="btn-back-exercises" class="text-gray-500 hover:text-gray-800 mb-4 inline-block font-medium text-sm transition-colors">← Quay lại danh sách</button>
       
       <div id="quiz-setup" class="mb-6 bg-gray-50 p-4 rounded-xl border">
-        <h3 class="font-bold mb-3 text-gray-700 text-sm">Chọn thông tin làm từ gợi ý:</h3>
+        <h3 class="font-bold mb-3 text-gray-700 text-sm">Chọn thông tin làm từ gợi ý (Câu hỏi):</h3>
         <div class="flex flex-wrap gap-4 text-sm">
           <label class="cursor-pointer flex items-center gap-2 font-medium"><input type="radio" name="prompt_type" value="tumoi" checked class="w-4 h-4 text-blue-600"> Từ mới</label>
           <label class="cursor-pointer flex items-center gap-2 font-medium"><input type="radio" name="prompt_type" value="phienam" class="w-4 h-4 text-blue-600"> Phiên âm</label>
@@ -139,7 +139,7 @@
   </main>
 
   <script>
-    // --- KHỞI TẠO TRẠNG THÁI ---
+    // --- KHỞI TẠO TRẠNG THÁI ỨNG DỤNG ---
     let currentExercise = []; 
     let savedExercises = JSON.parse(localStorage.getItem('exercises')) || [];
     let activeQuiz = null; 
@@ -154,6 +154,7 @@
       studentQuiz: document.getElementById('page-student-quiz')
     };
 
+    // Điều hướng giữa các màn hình
     function showPage(pageId) {
       Object.values(pages).forEach(p => p.classList.add('hidden'));
       pages[pageId].classList.remove('hidden');
@@ -163,7 +164,7 @@
       else nav.classList.remove('hidden');
     }
 
-    // --- XỬ LÝ ĐĂNG NHẬP & LINK ĐỔI VAI TRÒ ---
+    // Đăng nhập và chuyển đổi vai trò nhanh
     document.getElementById('btn-google-login').addEventListener('click', () => showPage('role'));
     document.getElementById('btn-switch-role').addEventListener('click', () => showPage('role'));
 
@@ -178,7 +179,7 @@
       showPage('studentList');
     });
 
-    // --- GIAO DIỆN GIẢNG VIÊN ---
+    // --- LOGIC PHÂN HỆ GIẢNG VIÊN ---
     const tbody = document.getElementById('teacher-word-list');
 
     function renderTeacherList() {
@@ -191,7 +192,7 @@
       `).join('');
     }
 
-    // Thêm từ thủ công
+    // Thêm từ thủ công bằng nút bấm
     document.getElementById('btn-add-word').addEventListener('click', () => {
       const tumoi = document.getElementById('input-tumoi').value.trim();
       const phienam = document.getElementById('input-phienam').value.trim();
@@ -204,11 +205,11 @@
         document.getElementById('input-phienam').value = '';
         document.getElementById('input-nghia').value = '';
       } else {
-        alert("Vui lòng điền đầy đủ cả 3 ô thông tin!");
+        alert("Vui lòng nhập đầy đủ cả 3 thông tin!");
       }
     });
 
-    // Xử lý đọc file Excel theo luật nghiêm ngặt
+    // THUẬT TOÁN ĐỌC FILE EXCEL THÔNG MINH: TỰ DÒ CỘT VÀ LỌC LẤY HÀNG DỮ LIỆU
     document.getElementById('excel-upload').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -219,55 +220,79 @@
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
+        
+        // Đọc toàn bộ bảng dưới dạng mảng 2 chiều [Hàng][Cột]
         const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
         let headerRowIdx = -1;
         let colMap = { tumoi: -1, phienam: -1, nghia: -1 };
 
+        // Bước 1: Quét tự động để tìm vị trí hàng chứa tiêu đề (Header)
         for (let i = 0; i < json.length; i++) {
           const row = json[i];
+          if (!row) continue;
+          
           let tM = -1, pA = -1, ng = -1;
-          let hasExtra = false;
 
           row.forEach((cell, idx) => {
-            const val = String(cell || "").trim();
-            if (val === "Từ mới") tM = idx;
-            else if (val === "Phiên âm") pA = idx;
-            else if (val === "Nghĩa") ng = idx;
-            else if (val !== "") hasExtra = true; 
+            if (cell !== undefined && cell !== null) {
+              const val = String(cell).trim().toLowerCase();
+              // Chấp nhận mọi biến thể viết hoa, viết thường hoặc không dấu
+              if (val === "từ mới" || val === "tumoi" || val === "từmới") tM = idx;
+              else if (val === "phiên âm" || val === "phienam" || val === "phiênâm") pA = idx;
+              else if (val === "nghĩa" || val === "nghia") ng = idx;
+            }
           });
 
-          if (tM !== -1 && pA !== -1 && ng !== -1 && !hasExtra) {
+          // Nếu tìm thấy đầy đủ cả 3 tiêu đề cột, ghi nhận vị trí index của hàng và cột đó
+          if (tM !== -1 && pA !== -1 && ng !== -1) {
             headerRowIdx = i;
             colMap = { tumoi: tM, phienam: pA, nghia: ng };
             break;
           }
         }
 
+        // Bước 2: Trích xuất và lọc dữ liệu của các hàng bên dưới hàng tiêu đề vừa tìm thấy
         if (headerRowIdx !== -1) {
+          let addedCount = 0;
+          
           for (let i = headerRowIdx + 1; i < json.length; i++) {
             const row = json[i];
-            if (row[colMap.tumoi]) {
+            if (!row) continue;
+
+            // Chỉ trích xuất tại đúng các vị trí cột đã ánh xạ trước đó
+            const tumoiVal = row[colMap.tumoi] !== undefined ? String(row[colMap.tumoi]).trim() : "";
+            const phienamVal = row[colMap.phienam] !== undefined ? String(row[colMap.phienam]).trim() : "";
+            const nghiaVal = row[colMap.nghia] !== undefined ? String(row[colMap.nghia]).trim() : "";
+
+            // Chỉ lấy những hàng mà cột "Từ mới" có chữ (loại bỏ các hàng trống dư thừa cuối file)
+            if (tumoiVal !== "") {
               currentExercise.push({
-                tumoi: String(row[colMap.tumoi] || "").trim(),
-                phienam: String(row[colMap.phienam] || "").trim(),
-                nghia: String(row[colMap.nghia] || "").trim()
+                tumoi: tumoiVal,
+                phienam: phienamVal,
+                nghia: nghiaVal
               });
+              addedCount++;
             }
           }
-          renderTeacherList();
-          alert("Tải dữ liệu từ file Excel thành công!");
+
+          if (addedCount > 0) {
+            renderTeacherList();
+            alert(`Tải thành công! Hệ thống đã lọc lấy đúng dữ liệu của ${addedCount} từ vào bài tập.`);
+          } else {
+            alert("Cấu trúc file hợp lệ nhưng không phát hiện dữ liệu từ mới nào ở các hàng phía dưới.");
+          }
         } else {
-          alert("LỖI: File Excel không hợp lệ! Header chỉ được chứa đúng 3 cột 'Từ mới', 'Phiên âm', 'Nghĩa', không được thừa cột khác.");
+          alert("LỖI: File Excel không hợp lệ!\nFile tải lên bắt buộc phải chứa ít nhất 3 cột tiêu đề tên là: 'Từ mới', 'Phiên âm', và 'Nghĩa'. Bạn hãy kiểm tra lại tên cột nhé!");
         }
       };
       reader.readAsArrayBuffer(file);
-      e.target.value = ''; 
+      e.target.value = ''; // Reset phần tử tải lên
     });
 
-    // Lưu bài tập
+    // Lưu bài tập vào LocalStorage
     document.getElementById('btn-save-exercise').addEventListener('click', () => {
-      if (currentExercise.length === 0) return alert("Bài tập hiện tại chưa có từ nào!");
+      if (currentExercise.length === 0) return alert("Hiện chưa có từ nào để tạo bài tập!");
       savedExercises.push({
         id: Date.now(),
         date: new Date().toLocaleDateString('vi-VN'),
@@ -276,20 +301,20 @@
       localStorage.setItem('exercises', JSON.stringify(savedExercises));
       currentExercise = [];
       renderTeacherList();
-      alert("Đã lưu bài tập thành công vào hệ thống!");
+      alert("Hệ thống đã lưu gói bài tập thành công!");
     });
 
-    // --- GIAO DIỆN SINH VIÊN ---
+    // --- LOGIC PHÂN HỆ SINH VIÊN ---
     function renderStudentExercises() {
       const container = document.getElementById('exercise-list');
       if (savedExercises.length === 0) {
-        container.innerHTML = `<p class="col-span-full text-center text-gray-500 bg-white p-6 rounded-xl border">Hiện tại chưa có bài tập nào do Giảng viên đăng tải.</p>`;
+        container.innerHTML = `<p class="col-span-full text-center text-gray-500 bg-white p-6 rounded-xl border">Hiện chưa có bài tập nào được đăng tải từ Giảng viên.</p>`;
         return;
       }
       container.innerHTML = savedExercises.map((ex, idx) => `
         <div class="bg-white p-5 rounded-xl shadow border border-gray-100 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-blue-400 transition-all active:scale-95" onclick="openQuiz(${idx})">
           <h3 class="font-bold text-lg text-blue-600">Bài tập số ${idx + 1}</h3>
-          <p class="text-xs text-gray-400 mt-2">Tổng số từ: ${ex.words.length} từ | Ngày tạo: ${ex.date}</p>
+          <p class="text-xs text-gray-400 mt-2">Số lượng: ${ex.words.length} từ | Ngày tạo: ${ex.date}</p>
         </div>
       `).join('');
     }
@@ -313,7 +338,7 @@
 
     function loadQuizWord() {
       if (quizCurrentIndex >= activeQuiz.length) {
-        alert("🎉 Chúc mừng! Bạn đã hoàn thành xuất sắc toàn bộ bài tập này.");
+        alert("🎉 Chúc mừng! Bạn đã hoàn thành xuất sắc toàn bộ từ vựng trong bài tập này.");
         showPage('studentList');
         return;
       }
@@ -360,7 +385,7 @@
         input.disabled = true;
         checkAllDone();
       } else if (userVal !== '') {
-        // Sai luật: Báo đỏ + Rung lắc + Tự động xóa từ đó đi sau 0.4 giây
+        // Nếu làm sai: Đổi viền đỏ, kích hoạt rung lắc và tự động xóa dữ liệu nhập sai sau 400ms
         input.classList.add('border-red-500', 'text-red-500', 'shake');
         setTimeout(() => {
           input.value = '';
@@ -381,7 +406,7 @@
       }
     }
 
-    // Trang mặc định khi mở ứng dụng
+    // Khởi chạy ứng dụng tại màn hình Login mặc định
     showPage('login');
   </script>
 </body>
