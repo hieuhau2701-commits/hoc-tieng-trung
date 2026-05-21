@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hệ thống Học tập</title>
+  
+  <script type="module" crossorigin src="/assets/index-bb584c6b.js"></script>
+  <link rel="stylesheet" href="/assets/index-84e8adec.css">
+</head>
+<body class="animated-bg min-h-screen font-sans text-gray-800">
+  
+  <!-- Thanh điều hướng (ẩn ở trang đăng nhập) -->
+  <nav id="navbar" class="hidden bg-white/80 backdrop-blur-md shadow-md p-4 sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold text-blue-600">Hệ thống Học tập</h1>
+      <button id="btn-switch-role" class="text-sm font-medium text-gray-600 hover:text-blue-500 transition-colors">🔄 Đổi Vai Trò</button>
+    </div>
+  </nav>
+
+  <main id="app" class="max-w-4xl mx-auto p-4 flex justify-center items-center min-h-[80vh]">
+    
+    <!-- Trang Đăng nhập -->
+    <div id="page-login" class="page-section bg-white p-8 rounded-2xl shadow-xl text-center w-full max-w-sm">
+      <h2 class="text-2xl font-bold mb-6">Đăng nhập</h2>
+      <button id="btn-google-login" class="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-3 hover:bg-gray-50 hover:shadow-md transition-all active:scale-95">
+        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6" alt="Google">
+        <span>Đăng nhập bằng Google</span>
+      </button>
+    </div>
+
+    <!-- Trang Chọn Vai Trò -->
+    <div id="page-role" class="page-section hidden w-full max-w-md">
+      <h2 class="text-2xl font-bold mb-6 text-center text-white drop-shadow-md">Bạn là ai?</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <button id="role-teacher" class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all flex flex-col items-center gap-3 group">
+          <span class="text-4xl group-hover:scale-110 transition-transform">👨‍🏫</span>
+          <span class="font-semibold text-lg">Giảng viên</span>
+        </button>
+        <button id="role-student" class="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all flex flex-col items-center gap-3 group">
+          <span class="text-4xl group-hover:scale-110 transition-transform">🎓</span>
+          <span class="font-semibold text-lg">Sinh viên</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Trang Giảng Viên -->
+    <div id="page-teacher" class="page-section hidden w-full bg-white/95 p-6 md:p-8 rounded-2xl shadow-xl">
+      <h2 class="text-2xl font-bold mb-4 text-blue-600">Thêm Bài Tập Mới</h2>
+      
+      <!-- Upload Excel -->
+      <div class="mb-6 border-2 border-dashed border-blue-300 p-6 rounded-xl text-center bg-blue-50">
+        <p class="mb-2 text-sm text-gray-600">Tải lên file Excel. File hợp lệ phải chứa chính xác các cột: <b>Từ mới, Phiên âm, Nghĩa</b>.</p>
+        <input type="file" id="excel-upload" title="Tải lên file Excel" accept=".xlsx, .xls" class="block w-full text-sm..." />
+      </div>
+
+      <!-- Thêm thủ công -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <input type="text" id="input-tumoi" placeholder="Từ mới" class="border rounded-lg p-3 focus:ring-2 focus:ring-blue-400 outline-none transition-all">
+        <input type="text" id="input-phienam" placeholder="Phiên âm" class="border rounded-lg p-3 focus:ring-2 focus:ring-blue-400 outline-none transition-all">
+        <input type="text" id="input-nghia" placeholder="Nghĩa" class="border rounded-lg p-3 focus:ring-2 focus:ring-blue-400 outline-none transition-all">
+      </div>
+      <button id="btn-add-word" class="w-full md:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 active:scale-95 transition-all mb-6">Thêm từ</button>
+
+      <!-- Danh sách từ đang tạo -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="bg-gray-100"><th class="p-3">Từ mới</th><th class="p-3">Phiên âm</th><th class="p-3">Nghĩa</th></tr>
+          </thead>
+          <tbody id="teacher-word-list"></tbody>
+        </table>
+      </div>
+      <button id="btn-save-exercise" class="mt-6 w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 active:scale-95 transition-all shadow-lg">Lưu Bài Tập</button>
+    </div>
+
+    <!-- Trang Sinh Viên: Danh sách bài tập -->
+    <div id="page-student-list" class="page-section hidden w-full">
+      <h2 class="text-2xl font-bold mb-6 text-white drop-shadow-md text-center">Danh sách Bài tập</h2>
+      <div id="exercise-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Render bằng JS -->
+      </div>
+    </div>
+
+    <!-- Trang Sinh Viên: Làm bài -->
+    <div id="page-student-quiz" class="page-section hidden w-full bg-white p-6 md:p-8 rounded-2xl shadow-xl max-w-2xl mx-auto">
+      <button id="btn-back-exercises" class="text-gray-500 hover:text-gray-800 mb-4 inline-block font-medium">← Quay lại danh sách</button>
+      
+      <div id="quiz-setup" class="mb-6 bg-gray-50 p-4 rounded-xl">
+        <h3 class="font-bold mb-3">Chọn thông tin gợi ý:</h3>
+        <div class="flex gap-4">
+          <label class="cursor-pointer flex items-center gap-2"><input type="radio" name="prompt_type" value="tumoi" checked> Từ mới</label>
+          <label class="cursor-pointer flex items-center gap-2"><input type="radio" name="prompt_type" value="phienam"> Phiên âm</label>
+          <label class="cursor-pointer flex items-center gap-2"><input type="radio" name="prompt_type" value="nghia"> Nghĩa</label>
+        </div>
+        <button id="btn-start-quiz" class="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all">Bắt đầu làm</button>
+      </div>
+
+      <div id="quiz-area" class="hidden text-center">
+        <div class="mb-2 text-sm text-gray-500 font-bold" id="quiz-progress">Từ 1 / 10</div>
+        <div class="text-5xl font-bold text-blue-600 mb-8 py-8 border-b-2" id="quiz-prompt">---</div>
+        
+        <div class="grid grid-cols-1 gap-4 max-w-sm mx-auto" id="quiz-inputs-container">
+          <!-- Render inputs bằng JS -->
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  
+</body>
+</html>
