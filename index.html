@@ -34,10 +34,10 @@
 <body class="animated-bg min-h-screen font-sans text-gray-800">
   
   <nav id="navbar" class="hidden bg-white/80 backdrop-blur-md shadow-md p-4 sticky top-0 z-50">
-    <div class="max-w-4xl mx-auto flex justify-between items-center">
+    <div class="max-w-4xl mx-auto flex justify-between items-center flex-wrap gap-2">
       <h1 class="text-xl font-bold text-blue-600">Hệ thống Học tập</h1>
       <div class="flex items-center gap-3">
-        <span id="user-info" class="text-sm font-semibold text-gray-700"></span>
+        <span id="user-info" class="text-sm font-semibold text-gray-700 hidden sm:inline-block"></span>
         <button id="btn-switch-role" class="text-sm font-medium text-gray-600 hover:text-blue-500 bg-gray-100 px-3 py-1.5 rounded-lg active:scale-95 transition-all">🔄 Đổi Vai Trò</button>
         <button id="btn-logout" class="text-sm font-medium text-red-500 hover:text-red-700 bg-red-50 px-3 py-1.5 rounded-lg active:scale-95 transition-all">Đăng xuất</button>
       </div>
@@ -46,12 +46,25 @@
 
   <main id="app" class="max-w-5xl mx-auto p-4 flex justify-center items-center min-h-[85vh] w-full">
     
-    <div id="page-login" class="page-section bg-white p-8 rounded-2xl shadow-xl text-center w-full max-w-sm">
-      <h2 class="text-2xl font-bold mb-6">Đăng nhập</h2>
-      <button id="btn-google-login" class="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg p-3 hover:bg-gray-50 hover:shadow-md transition-all active:scale-95">
-        <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-6 h-6" alt="Google">
-        <span class="font-medium">Đăng nhập bằng Google</span>
-      </button>
+    <div id="page-login" class="page-section bg-white p-6 md:p-8 rounded-2xl shadow-xl text-center w-full max-w-sm">
+      <h2 class="text-2xl font-bold mb-2 text-blue-600">Xin chào!</h2>
+      <p class="text-sm text-gray-500 mb-6">Đăng nhập hoặc đăng ký tài khoản</p>
+      
+      <div class="flex flex-col gap-4 mb-6 text-left">
+        <input type="email" id="auth-email" placeholder="Nhập địa chỉ Email" class="border-2 rounded-lg p-3 text-sm focus:border-blue-500 outline-none w-full bg-gray-50 transition-colors">
+        <input type="password" id="auth-password" placeholder="Nhập Mật khẩu (từ 6 ký tự)" class="border-2 rounded-lg p-3 text-sm focus:border-blue-500 outline-none w-full bg-gray-50 transition-colors">
+      </div>
+      
+      <div class="flex flex-col gap-3">
+        <button id="btn-login" class="w-full bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-700 active:scale-95 transition-all font-bold shadow-md">Đăng Nhập</button>
+        <div class="relative flex py-2 items-center">
+          <div class="flex-grow border-t border-gray-200"></div>
+          <span class="flex-shrink-0 mx-4 text-gray-400 text-xs">hoặc</span>
+          <div class="flex-grow border-t border-gray-200"></div>
+        </div>
+        <button id="btn-register" class="w-full bg-green-500 text-white px-5 py-3 rounded-lg hover:bg-green-600 active:scale-95 transition-all font-bold shadow-md">Đăng Ký Tài Khoản Mới</button>
+      </div>
+      <p class="text-xs text-gray-400 mt-5">* Khi đăng ký, hệ thống sẽ gửi 1 link xác minh vào email của bạn.</p>
     </div>
 
     <div id="page-role" class="page-section hidden w-full max-w-md">
@@ -160,7 +173,9 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     const auth = firebase.auth();
-    const provider = new firebase.auth.GoogleAuthProvider();
+    
+    // Cài đặt ngôn ngữ tiếng Việt cho email xác minh gửi về
+    auth.useDeviceLanguage(); 
     // -------------------------------------------------------------
 
     let currentUser = null;
@@ -188,22 +203,56 @@
       else nav.classList.remove('hidden');
     }
 
-    // --- AUTHENTICATION (GOOGLE LOGIN) ---
+    // --- AUTHENTICATION (EMAIL & PASSWORD) ---
     auth.onAuthStateChanged(user => {
       if (user) {
-        currentUser = user;
-        document.getElementById('user-info').innerText = `👤 ${user.displayName}`;
-        showPage('role');
+        // Chỉ cho phép vào hệ thống nếu tài khoản đã xác minh email
+        if (user.emailVerified) {
+          currentUser = user;
+          document.getElementById('user-info').innerText = `👤 ${user.email}`;
+          showPage('role');
+        } else {
+          auth.signOut(); // Đẩy ra nếu chưa xác minh
+          alert("Lỗi: Tài khoản của bạn chưa được xác minh!\n\nVui lòng mở hộp thư email (hoặc thư rác/spam) và click vào link xác minh của Firebase gửi tới, sau đó đăng nhập lại.");
+        }
       } else {
         currentUser = null;
         showPage('login');
       }
     });
 
-    document.getElementById('btn-google-login').addEventListener('click', () => {
-      auth.signInWithPopup(provider).catch(error => {
-        alert("Lỗi đăng nhập Google: " + error.message + "\n(Vui lòng kiểm tra đã bật Google Auth trong Firebase chưa!)");
-      });
+    // ĐĂNG KÝ
+    document.getElementById('btn-register').addEventListener('click', () => {
+      const email = document.getElementById('auth-email').value.trim();
+      const pass = document.getElementById('auth-password').value;
+      if(!email || !pass) return alert("Vui lòng nhập Email và Mật khẩu!");
+      if(pass.length < 6) return alert("Mật khẩu phải từ 6 ký tự trở lên!");
+
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then((userCredential) => {
+          // Gửi email xác minh
+          userCredential.user.sendEmailVerification().then(() => {
+            auth.signOut(); // Bắt buộc đăng xuất để chờ xác minh
+            alert("ĐĂNG KÝ THÀNH CÔNG!\n\nHệ thống vừa gửi 1 thư xác nhận đến email của bạn.\nVui lòng kiểm tra email và bấm vào link xác nhận để hoàn tất đăng ký.");
+          });
+        })
+        .catch(error => alert("Lỗi đăng ký: " + error.message));
+    });
+
+    // ĐĂNG NHẬP
+    document.getElementById('btn-login').addEventListener('click', () => {
+      const email = document.getElementById('auth-email').value.trim();
+      const pass = document.getElementById('auth-password').value;
+      if(!email || !pass) return alert("Vui lòng nhập Email và Mật khẩu!");
+
+      auth.signInWithEmailAndPassword(email, pass)
+        .catch(error => {
+          if(error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+            alert("Lỗi: Sai email hoặc mật khẩu!");
+          } else {
+            alert("Lỗi đăng nhập: " + error.message);
+          }
+        });
     });
 
     document.getElementById('btn-logout').addEventListener('click', () => auth.signOut());
@@ -361,7 +410,7 @@
       if (savedExercises.length === 0) return container.innerHTML = `<p class="col-span-full text-center text-gray-500 bg-white p-6 rounded-xl border">Chưa có bài tập.</p>`;
       const sorted = [...savedExercises].reverse();
       
-      // Fetch user progress to display
+      // Lấy tiến trình học tập của user
       database.ref(`progress/${currentUser.uid}`).once('value').then(snap => {
         const progressData = snap.val() || {};
         container.innerHTML = sorted.map(ex => {
@@ -395,7 +444,7 @@
             quizCurrentIndex = prog.currentIndex;
           } else {
             quizCurrentIndex = 0;
-            saveProgress(); // Reset về 0
+            saveProgress(); 
           }
         } else {
           quizCurrentIndex = 0;
@@ -440,8 +489,8 @@
       
       promptEl.innerText = word[quizPromptType];
       
-      // Hiển thị pinyin ở dưới nếu gợi ý là Từ mới
-      if (quizPromptType === 'tumoi') {
+      // Chỉ hiện Pinyin ở dưới nếu người dùng chọn gợi ý bằng "Từ mới" hoặc "Nghĩa"
+      if (quizPromptType === 'tumoi' || quizPromptType === 'nghia') {
         pinyinEl.innerText = word.phienam;
         pinyinEl.classList.remove('hidden');
       } else {
