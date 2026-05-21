@@ -57,7 +57,6 @@
         #toast-container { position: fixed; bottom: 20px; right: 20px; left: 20px; z-index: 50; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
         @media (min-width: 640px) { #toast-container { left: auto; } }
         
-        /* Tùy chỉnh thanh cuộn */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -68,7 +67,6 @@
 
     <div id="toast-container"></div>
 
-    <!-- Header -->
     <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm p-3 sm:p-4 sticky top-0 z-20 transition-colors duration-500 border-b border-gray-200 dark:border-slate-700">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
             <h1 class="text-lg sm:text-xl font-bold flex items-center gap-2 text-teal-600 dark:text-teal-400 cursor-pointer btn-effect" onclick="window.render()">
@@ -80,7 +78,7 @@
                 </button>
 
                 <div id="user-info" class="hidden text-sm font-medium flex items-center gap-2 sm:gap-3 bg-gray-50 dark:bg-slate-800 p-1.5 pr-2 rounded-full border border-gray-200 dark:border-slate-700">
-                    <img id="user-avatar" src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff" class="w-8 h-8 rounded-full shadow-sm" alt="Avatar">
+                    <img id="user-avatar" src="" class="w-8 h-8 rounded-full shadow-sm" alt="Avatar">
                     <div class="hidden md:flex flex-col">
                         <span id="welcome-text" class="text-xs font-bold truncate max-w-[100px]"></span>
                         <span id="role-text" class="text-[10px] text-gray-500 dark:text-gray-400"></span>
@@ -92,10 +90,8 @@
         </div>
     </header>
 
-    <!-- Main Content Area -->
     <main id="app-content" class="flex-grow flex items-center justify-center p-4 max-w-4xl mx-auto w-full relative z-10"></main>
 
-    <!-- Modal Nhập/Xuất Mã -->
     <div id="code-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl w-full max-w-md animate-slide-up border border-slate-200 dark:border-slate-700">
             <h3 id="modal-title" class="text-xl font-bold mb-4 text-slate-800 dark:text-white">...</h3>
@@ -107,7 +103,6 @@
         </div>
     </div>
 
-    <!-- Script chuẩn Local Storage (Không cần tải thư viện Firebase) -->
     <script>
         // --- THEME ---
         window.toggleTheme = () => {
@@ -140,7 +135,6 @@
             setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity 0.4s ease'; setTimeout(() => toast.remove(), 400); }, 3000);
         };
 
-        // --- ĐIỀU HƯỚNG ---
         window.render = () => {
             if (!authUser) {
                 userInfoDiv.classList.add('hidden');
@@ -159,12 +153,9 @@
             }
         };
 
-        // --- LOGIN & ROLE ---
         window.handleLogin = () => {
-            // Thay vì dùng prompt bị điện thoại chặn, ta lấy giá trị trực tiếp từ ô nhập
             const nameInput = document.getElementById('user-name-input');
             const name = nameInput ? nameInput.value.trim() : '';
-            
             if(name) {
                 authUser = { id: Date.now().toString(), name: name, role: null };
                 localStorage.setItem('tt_user', JSON.stringify(authUser));
@@ -175,17 +166,11 @@
             }
         };
 
-        window.handleLogout = () => {
-            authUser = null;
-            localStorage.removeItem('tt_user');
-            render();
-        };
+        window.handleLogout = () => { authUser = null; localStorage.removeItem('tt_user'); render(); };
 
         window.saveRole = (role) => {
-            authUser.role = role;
-            localStorage.setItem('tt_user', JSON.stringify(authUser));
-            window.showNotification("Đã cập nhật vai trò!", "success");
-            render();
+            authUser.role = role; localStorage.setItem('tt_user', JSON.stringify(authUser));
+            window.showNotification("Đã cập nhật vai trò!", "success"); render();
         };
 
         window.renderLogin = () => {
@@ -197,15 +182,10 @@
                         <h2 class="text-3xl font-extrabold text-slate-800 dark:text-white tracking-tight">Xin chào!</h2>
                         <p class="text-slate-500 dark:text-slate-400 mt-2">Ứng dụng đã được chuyển sang chế độ Siêu mượt. Dữ liệu lưu trực tiếp trên thiết bị của bạn.</p>
                     </div>
-                    
-                    <!-- Ô nhập tên mới, không dùng popup nữa -->
                     <div class="mb-6">
                         <input type="text" id="user-name-input" placeholder="Nhập tên của bạn để bắt đầu..." class="w-full p-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl focus:border-teal-500 focus:ring-4 outline-none font-bold dark:text-white text-lg text-center shadow-inner transition-all" value="Người học chăm chỉ">
                     </div>
-
-                    <button onclick="window.handleLogin()" class="btn-effect w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-4 px-4 rounded-2xl shadow-lg flex items-center justify-center text-lg gap-2">
-                        Bắt Đầu Ngay 🚀
-                    </button>
+                    <button onclick="window.handleLogin()" class="btn-effect w-full bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-bold py-4 px-4 rounded-2xl shadow-lg flex items-center justify-center text-lg gap-2">Bắt Đầu Ngay 🚀</button>
                 </div>
             `;
         };
@@ -233,7 +213,6 @@
             `;
         };
 
-        // --- GIAO DIỆN GIẢNG VIÊN ---
         window.renderTeacherDashboard = () => {
             let lessonsHtml = lessons.map((l) => `
                 <div class="card-hover bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3 group">
@@ -268,7 +247,6 @@
 
         window.exportLesson = (id) => {
             const lesson = lessons.find(l => l.id === id);
-            // Mã hóa bài học thành chuỗi Base64
             const encoded = btoa(encodeURIComponent(JSON.stringify(lesson)));
             document.getElementById('code-modal').classList.remove('hidden');
             document.getElementById('modal-title').textContent = 'Mã Chia Sẻ Bài Học';
@@ -292,7 +270,6 @@
             }
         };
 
-        // --- TẠO BÀI HỌC (GIẢNG VIÊN) ---
         window.renderCreateLesson = () => {
             contentDiv.innerHTML = `
                 <div class="w-full max-w-4xl bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-[2rem] shadow-2xl animate-slide-up border border-slate-100 dark:border-slate-700 relative">
@@ -304,7 +281,7 @@
                     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6 bg-indigo-50/50 dark:bg-indigo-900/10 p-5 rounded-2xl border border-indigo-100 dark:border-indigo-800/30">
                         <div class="text-left w-full sm:w-auto">
                             <h4 class="font-bold text-indigo-900 dark:text-indigo-300">Nhập từ file Excel tự động nhận diện cột</h4>
-                            <p class="text-xs text-indigo-600 dark:text-indigo-400 mt-1">Hệ thống tự tìm cột có tên: TỪ MỚI, PHIÊN ÂM, NGHĨA</p>
+                            <p class="text-xs text-indigo-600 dark:text-indigo-400 mt-1">Sẽ tự động TỪ CHỐI cột ví dụ. Chỉ lấy đúng: TỪ MỚI, PHIÊN ÂM, NGHĨA</p>
                         </div>
                         <input type="file" id="excel-file" accept=".xlsx, .xls, .csv" class="hidden" onchange="window.handleExcelUpload(event)">
                         <button onclick="document.getElementById('excel-file').click()" class="btn-effect w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-6 rounded-xl shadow-md transition">Tải file lên</button>
@@ -326,27 +303,29 @@
                     const workbook = XLSX.read(data, {type: 'array'});
                     const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1});
                     if (json.length > 0) {
-                        // Tự động tìm cột dựa trên tiêu đề
                         let headerRowIndex = -1;
                         let zhCol = -1, pyCol = -1, viCol = -1;
                         
+                        // Quét 10 dòng đầu để tìm ĐÚNG tên cột
                         for (let i = 0; i < Math.min(10, json.length); i++) {
                             const row = json[i];
                             if (!row) continue;
                             for (let j = 0; j < row.length; j++) {
-                                const cellValue = String(row[j] || '').toLowerCase().trim();
-                                // Chỉ lấy cột khi tên ô CHÍNH XÁC là "từ mới", "phiên âm", "nghĩa" (bỏ qua các ô như "phiên âm ví dụ")
+                                // Xóa mọi khoảng trắng thừa để đối chiếu chính xác
+                                const cellValue = String(row[j] || '').toLowerCase().replace(/\\s+/g, ' ').trim();
+                                
+                                // CHỈ lấy khi === (chính xác tuyệt đối), không dùng includes để tránh cột ví dụ
                                 if (zhCol === -1 && (cellValue === 'từ mới' || cellValue === 'từ' || cellValue === 'hán')) zhCol = j;
                                 if (pyCol === -1 && (cellValue === 'phiên âm' || cellValue === 'pinyin')) pyCol = j;
-                                if (viCol === -1 && (cellValue === 'nghĩa' || cellValue === 'tiếng việt')) viCol = j;
+                                if (viCol === -1 && (cellValue === 'nghĩa' || cellValue === 'tiếng việt' || cellValue === 'nghĩa tiếng việt')) viCol = j;
                             }
+                            // Nếu tìm thấy ít nhất 1 cột thì xác định đó là dòng tiêu đề và dừng quét dòng
                             if (zhCol !== -1 || pyCol !== -1 || viCol !== -1) {
                                 headerRowIndex = i;
                                 break;
                             }
                         }
 
-                        // Fallback mặc định nếu file không có các tiêu đề trên
                         if (headerRowIndex === -1) {
                             zhCol = 1; pyCol = 2; viCol = 3; headerRowIndex = 0;
                         } else {
@@ -357,7 +336,6 @@
 
                         document.getElementById('word-list').innerHTML = '';
                         let count = 0;
-                        // Quét dữ liệu từ dòng ngay dưới dòng tiêu đề
                         for (let i = headerRowIndex + 1; i < json.length; i++) {
                             const r = json[i]; if (!r || r.length === 0) continue;
                             const zh = r[zhCol] ? String(r[zhCol]).trim() : ''; 
@@ -365,8 +343,8 @@
                             const vi = r[viCol] ? String(r[viCol]).trim() : '';
                             if (zh || py || vi) { window.addWordRowWithValue(zh, py, vi); count++; }
                         }
-                        const t = document.getElementById('lesson-title'); if (!t.value) t.value = file.name.replace(/\.[^/.]+$/, "");
-                        window.showNotification(`Đã phân tích ${count} từ vựng!`, "success");
+                        const t = document.getElementById('lesson-title'); if (!t.value) t.value = file.name.replace(/\\.[^/.]+$/, "");
+                        window.showNotification(`Đã phân tích ${count} từ vựng chuẩn xác!`, "success");
                     }
                 } catch (err) { window.showNotification('File lỗi định dạng.', "error"); }
                 event.target.value = '';
@@ -404,14 +382,12 @@
             if (!isValid) return window.showNotification('Hãy điền đủ 3 ô cho mỗi từ nhé!', 'error');
             if (words.length === 0) return window.showNotification('Chưa có từ vựng nào!', 'warning');
 
-            // Lưu trực tiếp vào Local Storage
             lessons.push({ id: 'ls_' + Date.now(), title, words, createdAt: Date.now() });
             localStorage.setItem('tt_lessons', JSON.stringify(lessons));
             window.showNotification('Đã lưu bài học thành công trên máy này!', 'success');
             window.renderTeacherDashboard();
         };
 
-        // --- GIAO DIỆN SINH VIÊN ---
         window.renderStudentDashboard = () => {
             let lessonsHtml = lessons.map(l => `
                 <div class="card-hover bg-white dark:bg-slate-800 p-6 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700 cursor-pointer text-center group"
@@ -453,7 +429,7 @@
                 try {
                     const parsedLesson = JSON.parse(decodeURIComponent(atob(code)));
                     if(parsedLesson && parsedLesson.title && parsedLesson.words) {
-                        parsedLesson.id = 'ls_imported_' + Date.now(); // Tạo ID mới tránh trùng
+                        parsedLesson.id = 'ls_imported_' + Date.now();
                         lessons.push(parsedLesson);
                         localStorage.setItem('tt_lessons', JSON.stringify(lessons));
                         window.showNotification("Đã thêm bài học thành công!", "success");
@@ -464,7 +440,6 @@
             };
         };
 
-        // --- KHU VỰC LUYỆN TẬP ---
         window.showPracticeOptions = (lessonId) => {
             const lesson = lessons.find(l => l.id === lessonId);
             contentDiv.innerHTML = `
@@ -562,8 +537,8 @@
             else { i1 = document.getElementById('input-zh'); correct1 = word.zh; i2 = document.getElementById('input-py'); correct2 = word.py; }
 
             const validateField = (inputEl, correctValue) => {
-                const val = inputEl.value.replace(/\s+/g, '').toLowerCase();
-                const target = correctValue.replace(/\s+/g, '').toLowerCase();
+                const val = inputEl.value.replace(/\\s+/g, '').toLowerCase();
+                const target = correctValue.replace(/\\s+/g, '').toLowerCase();
                 inputEl.classList.remove('border-slate-200', 'border-red-500', 'bg-red-50', 'border-green-500', 'bg-green-50', 'shake', 'text-red-600', 'dark:border-slate-700');
                 void inputEl.offsetWidth;
 
@@ -592,7 +567,6 @@
             }
         };
 
-        // Bắt đầu
         render();
     </script>
 </body>
