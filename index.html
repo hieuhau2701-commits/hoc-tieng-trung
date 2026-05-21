@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Hệ thống Học tập Tiếng Trung Cloud</title>
+  <title>Hệ thống Học tập Tiếng Trung Cloud (V2)</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   
@@ -58,12 +58,12 @@
   
   <nav id="navbar" class="hidden bg-white/80 backdrop-blur-md shadow-md p-4 sticky top-0 z-50">
     <div class="max-w-4xl mx-auto flex justify-between items-center">
-      <h1 class="text-xl font-bold text-blue-600">Hệ thống Học tập Tiếng Trung</h1>
+      <h1 class="text-xl font-bold text-blue-600">Hệ thống Học tập</h1>
       <button id="btn-switch-role" class="text-sm font-medium text-gray-600 hover:text-blue-500 bg-gray-100 px-3 py-1.5 rounded-lg active:scale-95 transition-all">🔄 Đổi Vai Trò</button>
     </div>
   </nav>
 
-  <main id="app" class="max-w-4xl mx-auto p-4 flex justify-center items-center min-h-[85vh]">
+  <main id="app" class="max-w-4xl mx-auto p-4 flex justify-center items-center min-h-[85vh] w-full">
     
     <div id="page-login" class="page-section bg-white p-8 rounded-2xl shadow-xl text-center w-full max-w-sm">
       <h2 class="text-2xl font-bold mb-6">Đăng nhập</h2>
@@ -87,48 +87,58 @@
       </div>
     </div>
 
-    <div id="page-teacher" class="page-section hidden w-full bg-white/95 p-5 md:p-8 rounded-2xl shadow-xl">
-      <h2 class="text-2xl font-bold mb-4 text-blue-600">Thêm Bài Tập Mới</h2>
+    <div id="page-teacher" class="page-section hidden w-full grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
       
-      <div class="mb-6 border-2 border-dashed border-blue-300 p-5 rounded-xl text-center bg-blue-50/50">
-        <p class="mb-2 text-xs md:text-sm text-gray-600">Tải lên file Excel (.xlsx). Hệ thống sẽ tự động tìm và trích xuất dữ liệu từ các cột <b class="text-blue-600">Từ mới</b>, <b class="text-blue-600">Phiên âm</b>, <b class="text-blue-600">Nghĩa</b>.</p>
-        <input type="file" id="excel-upload" title="Chọn file excel" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer"/>
+      <div class="bg-white/95 p-5 rounded-2xl shadow-xl md:col-span-1">
+        <h3 class="font-bold text-lg text-gray-700 mb-3 pb-2 border-b">Bài tập đã lưu</h3>
+        <div id="teacher-exercise-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+          </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-        <input type="text" id="input-tumoi" placeholder="Từ mới" class="border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition-all">
-        <input type="text" id="input-phienam" placeholder="Phiên âm" class="border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition-all">
-        <input type="text" id="input-nghia" placeholder="Nghĩa" class="border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition-all">
-      </div>
-      <button id="btn-add-word" class="w-full md:w-auto bg-blue-600 text-white px-6 py-2.5 rounded-lg hover:bg-blue-700 active:scale-95 transition-all mb-6 text-sm font-medium">Thêm từ</button>
+      <div class="bg-white/95 p-5 md:p-6 rounded-2xl shadow-xl md:col-span-2">
+        <div class="flex justify-between items-center mb-4">
+          <h2 id="teacher-form-title" class="text-xl font-bold text-blue-600">Thêm Bài Tập Mới</h2>
+          <button id="btn-clear-edit" class="hidden text-xs bg-red-100 text-red-600 px-2.5 py-1.5 rounded-lg hover:bg-red-200 transition-colors">Hủy sửa / Tạo bài mới</button>
+        </div>
+        
+        <div class="mb-5 border-2 border-dashed border-blue-300 p-4 rounded-xl text-center bg-blue-50/50">
+          <p class="mb-2 text-xs text-gray-600">Hệ thống tự động lọc dữ liệu từ cột: <b class="text-blue-600">Từ mới</b> và <b class="text-blue-600">Nghĩa</b>.</p>
+          <input type="file" id="excel-upload" title="Chọn file excel" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer"/>
+        </div>
 
-      <div class="overflow-x-auto max-h-60 border rounded-lg shadow-inner bg-gray-50">
-        <table class="w-full text-left border-collapse text-sm">
-          <thead>
-            <tr class="bg-gray-100 sticky top-0 shadow-sm"><th class="p-3">Từ mới</th><th class="p-3">Phiên âm</th><th class="p-3">Nghĩa</th></tr>
-          </thead>
-          <tbody id="teacher-word-list" class="divide-y bg-white"></tbody>
-        </table>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <input type="text" id="input-tumoi" placeholder="Từ mới" class="border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition-all">
+          <input type="text" id="input-nghia" placeholder="Nghĩa" class="border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-400 outline-none transition-all">
+        </div>
+        <button id="btn-add-word" class="w-full sm:w-auto bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 active:scale-95 transition-all mb-5 text-sm font-medium">Thêm từ</button>
+
+        <div class="overflow-x-auto max-h-52 border rounded-lg shadow-inner bg-gray-50">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-gray-100 sticky top-0 shadow-sm"><th class="p-3 w-1/2">Từ mới</th><th class="p-3 w-1/2">Nghĩa</th></tr>
+            </thead>
+            <tbody id="teacher-word-list" class="divide-y bg-white"></tbody>
+          </table>
+        </div>
+        <button id="btn-save-exercise" class="mt-5 w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 active:scale-95 transition-all shadow-md">Lưu Bài Tập Lên Đám Mây (Cloud)</button>
       </div>
-      <button id="btn-save-exercise" class="mt-6 w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 active:scale-95 transition-all shadow-md">Lưu Bài Tập Lên Đám Mây (Cloud)</button>
     </div>
 
-    <div id="page-student-list" class="page-section hidden w-full">
+    <div id="page-student-list" class="page-section hidden w-full max-w-2xl">
       <h2 class="text-2xl font-bold mb-6 text-gray-800 drop-shadow-sm text-center">Danh sách Bài tập Trực tuyến</h2>
       <div id="exercise-list" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
     </div>
 
-    <div id="page-student-quiz" class="page-section hidden w-full bg-white p-5 md:p-8 rounded-2xl shadow-xl max-w-2xl mx-auto">
+    <div id="page-student-quiz" class="page-section hidden w-full bg-white p-5 md:p-8 rounded-2xl shadow-xl max-w-xl mx-auto">
       <button id="btn-back-exercises" class="text-gray-500 hover:text-gray-800 mb-4 inline-block font-medium text-sm transition-colors">← Quay lại danh sách</button>
       
       <div id="quiz-setup" class="mb-6 bg-gray-50 p-4 rounded-xl border">
         <h3 class="font-bold mb-3 text-gray-700 text-sm">Chọn thông tin làm từ gợi ý (Câu hỏi):</h3>
-        <div class="flex flex-wrap gap-4 text-sm">
+        <div class="flex gap-6 text-sm">
           <label class="cursor-pointer flex items-center gap-2 font-medium"><input type="radio" name="prompt_type" value="tumoi" checked class="w-4 h-4 text-blue-600"> Từ mới</label>
-          <label class="cursor-pointer flex items-center gap-2 font-medium"><input type="radio" name="prompt_type" value="phienam" class="w-4 h-4 text-blue-600"> Phiên âm</label>
           <label class="cursor-pointer flex items-center gap-2 font-medium"><input type="radio" name="prompt_type" value="nghia" class="w-4 h-4 text-blue-600"> Nghĩa</label>
         </div>
-        <button id="btn-start-quiz" class="mt-4 w-full sm:w-auto bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-all active:scale-95 text-sm">Bắt đầu làm bài</button>
+        <button id="btn-start-quiz" class="mt-4 w-full bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-all active:scale-95 text-sm">Bắt đầu làm bài</button>
       </div>
 
       <div id="quiz-area" class="hidden text-center">
@@ -148,6 +158,7 @@
     const firebaseConfig = {
   apiKey: "AIzaSyBynCOxVhtr5wp2d9miPDkwkzjma7C70Ik",
   authDomain: "luyentiengtrung-fd6ed.firebaseapp.com",
+  databaseURL: "https://luyentiengtrung-fd6ed-default-rtdb.firebaseio.com",
   projectId: "luyentiengtrung-fd6ed",
   storageBucket: "luyentiengtrung-fd6ed.firebasestorage.app",
   messagingSenderId: "1001015127985",
@@ -161,10 +172,11 @@
     // -------------------------------------------------------------
 
     let currentExercise = []; 
-    let savedExercises = []; // Dữ liệu sẽ tự động đồng bộ từ đám mây về đây
+    let savedExercises = []; 
     let activeQuiz = null; 
     let quizCurrentIndex = 0;
     let quizPromptType = 'tumoi'; 
+    let editingExerciseId = null; // Quản lý ID bài tập đang được chọn để sửa
 
     const pages = {
       login: document.getElementById('page-login'),
@@ -174,19 +186,17 @@
       studentQuiz: document.getElementById('page-student-quiz')
     };
 
-    // TỰ ĐỘNG ĐỒNG BỘ DỮ LIỆU TỪ CLOUD (Bất kỳ thiết bị nào thêm bài, toàn bộ hệ thống sẽ cập nhật ngay lập tức)
+    // TỰ ĐỘNG ĐỒNG BỘ DỮ LIỆU TỪ CLOUD VỀ MÁY TRẠM
     database.ref('exercises').on('value', (snapshot) => {
       const data = snapshot.val();
-      // Chuyển đổi object từ Firebase thành mảng bài tập
       savedExercises = data ? Object.values(data) : [];
       
-      // Nếu sinh viên đang ở trang danh sách bài tập thì tự động làm mới giao diện
-      if (!pages.studentList.classList.contains('hidden')) {
-        renderStudentExercises();
-      }
+      // Đồng bộ làm mới danh sách bài tập ở cả màn hình giảng viên và sinh viên
+      if (!pages.studentList.classList.contains('hidden')) renderStudentExercises();
+      if (!pages.teacher.classList.contains('hidden')) renderTeacherExerciseList();
     });
 
-    // Điều hướng giữa các màn hình
+    // Điều hướng giữa các màn hình trang web
     function showPage(pageId) {
       Object.values(pages).forEach(p => p.classList.add('hidden'));
       pages[pageId].classList.remove('hidden');
@@ -197,11 +207,14 @@
     }
 
     document.getElementById('btn-google-login').addEventListener('click', () => showPage('role'));
-    document.getElementById('btn-switch-role').addEventListener('click', () => showPage('role'));
+    document.getElementById('btn-switch-role').addEventListener('click', () => {
+      resetTeacherForm();
+      showPage('role');
+    });
 
     document.getElementById('role-teacher').addEventListener('click', () => {
-      currentExercise = [];
-      renderTeacherList();
+      resetTeacherForm();
+      renderTeacherExerciseList();
       showPage('teacher');
     });
 
@@ -210,36 +223,89 @@
       showPage('studentList');
     });
 
-    // --- LOGIC GIẢNG VIÊN ---
+    // --- LOGIC PHÂN HỆ GIẢNG VIÊN ---
     const tbody = document.getElementById('teacher-word-list');
 
     function renderTeacherList() {
       tbody.innerHTML = currentExercise.map(word => `
         <tr class="hover:bg-gray-50 transition-colors">
           <td class="p-3 font-semibold text-gray-800">${word.tumoi}</td>
-          <td class="p-3 text-gray-600">${word.phienam}</td>
           <td class="p-3 text-gray-600">${word.nghia}</td>
         </tr>
       `).join('');
     }
 
+    // Hiển thị danh sách bài tập ở cột trái trang Giảng viên
+    function renderTeacherExerciseList() {
+      const container = document.getElementById('teacher-exercise-list');
+      if (savedExercises.length === 0) {
+        container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">Chưa có bài tập nào.</p>`;
+        return;
+      }
+      const sorted = [...savedExercises].reverse();
+      container.innerHTML = sorted.map(ex => `
+        <div class="p-3 rounded-xl border bg-gray-50 flex justify-between items-center gap-2 text-xs ${editingExerciseId === ex.id ? 'ring-2 ring-blue-500 bg-blue-50/50' : ''}">
+          <div class="overflow-hidden">
+            <p class="font-bold text-gray-700 truncate">Bài ngày ${ex.date}</p>
+            <p class="text-gray-400 text-[10px] mt-0.5">Số từ: ${ex.words.length} từ</p>
+          </div>
+          <button onclick="startEditExercise(${ex.id})" class="bg-blue-500 text-white px-3 py-1.5 rounded-md hover:bg-blue-600 transition-colors font-medium shrink-0 shadow-sm">Sửa</button>
+        </div>
+      `).join('');
+    }
+
+    // Kích hoạt chế độ sửa bài tập
+    window.startEditExercise = (id) => {
+      const selected = savedExercises.find(ex => ex.id === id);
+      if (!selected) return;
+
+      editingExerciseId = id;
+      currentExercise = [...selected.words]; // Tải dữ liệu từ bài tập cũ vào vùng nhớ đệm
+      
+      // Cập nhật giao diện biên tập sang trạng thái "Cập nhật"
+      document.getElementById('teacher-form-title').innerText = `Sửa Bài Tập (Mã: #${id})`;
+      document.getElementById('btn-clear-edit').classList.remove('hidden');
+      document.getElementById('btn-save-exercise').innerText = "Cập Nhật Bài Tập Lên Cloud";
+      document.getElementById('btn-save-exercise').classList.replace('bg-green-500', 'bg-blue-600');
+      document.getElementById('btn-save-exercise').classList.replace('hover:bg-green-600', 'hover:bg-blue-700');
+
+      renderTeacherList();
+      renderTeacherExerciseList();
+    };
+
+    // Đưa Form biên tập của Giảng viên về trạng thái thêm mới mặc định
+    function resetTeacherForm() {
+      editingExerciseId = null;
+      currentExercise = [];
+      document.getElementById('teacher-form-title').innerText = "Thêm Bài Tập Mới";
+      document.getElementById('btn-clear-edit').classList.add('hidden');
+      document.getElementById('btn-save-exercise').innerText = "Lưu Bài Tập Lên Đám Mây (Cloud)";
+      document.getElementById('btn-save-exercise').classList.replace('bg-blue-600', 'bg-green-500');
+      document.getElementById('btn-save-exercise').classList.replace('hover:bg-blue-700', 'hover:bg-green-600');
+      renderTeacherList();
+    }
+
+    document.getElementById('btn-clear-edit').addEventListener('click', () => {
+      resetTeacherForm();
+      renderTeacherExerciseList();
+    });
+
+    // Thêm từ thủ công bằng nút bấm
     document.getElementById('btn-add-word').addEventListener('click', () => {
       const tumoi = document.getElementById('input-tumoi').value.trim();
-      const phienam = document.getElementById('input-phienam').value.trim();
       const nghia = document.getElementById('input-nghia').value.trim();
 
-      if (tumoi && phienam && nghia) {
-        currentExercise.push({ tumoi, phienam, nghia });
+      if (tumoi && nghia) {
+        currentExercise.push({ tumoi, nghia });
         renderTeacherList();
         document.getElementById('input-tumoi').value = '';
-        document.getElementById('input-phienam').value = '';
         document.getElementById('input-nghia').value = '';
       } else {
-        alert("Vui lòng nhập đầy đủ cả 3 thông tin!");
+        alert("Vui lòng nhập đầy đủ cả Từ mới và Nghĩa!");
       }
     });
 
-    // THUẬT TOÁN ĐỌC FILE EXCEL THÔNG MINH
+    // THUẬT TOÁN ĐỌC FILE EXCEL THÔNG MINH (Bỏ qua cột Phiên âm)
     document.getElementById('excel-upload').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -253,29 +319,30 @@
         const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
         let headerRowIdx = -1;
-        let colMap = { tumoi: -1, phienam: -1, nghia: -1 };
+        let colMap = { tumoi: -1, nghia: -1 };
 
+        // Quét tự động để tìm vị trí hàng chứa tiêu đề (Header)
         for (let i = 0; i < json.length; i++) {
           const row = json[i];
           if (!row) continue;
-          let tM = -1, pA = -1, ng = -1;
+          let tM = -1, ng = -1;
 
           row.forEach((cell, idx) => {
             if (cell !== undefined && cell !== null) {
               const val = String(cell).trim().toLowerCase();
               if (val === "từ mới" || val === "tumoi" || val === "từmới") tM = idx;
-              else if (val === "phiên âm" || val === "phienam" || val === "phiênâm") pA = idx;
               else if (val === "nghĩa" || val === "nghia") ng = idx;
             }
           });
 
-          if (tM !== -1 && pA !== -1 && ng !== -1) {
+          if (tM !== -1 && ng !== -1) {
             headerRowIdx = i;
-            colMap = { tumoi: tM, phienam: pA, nghia: ng };
+            colMap = { tumoi: tM, nghia: ng };
             break;
           }
         }
 
+        // Trích xuất dữ liệu từ các hàng bên dưới
         if (headerRowIdx !== -1) {
           let addedCount = 0;
           for (let i = headerRowIdx + 1; i < json.length; i++) {
@@ -283,65 +350,64 @@
             if (!row) continue;
 
             const tumoiVal = row[colMap.tumoi] !== undefined ? String(row[colMap.tumoi]).trim() : "";
-            const phienamVal = row[colMap.phienam] !== undefined ? String(row[colMap.phienam]).trim() : "";
             const nghiaVal = row[colMap.nghia] !== undefined ? String(row[colMap.nghia]).trim() : "";
 
             if (tumoiVal !== "") {
-              currentExercise.push({ tumoi: tumoiVal, phienam: phienamVal, nghia: nghiaVal });
+              currentExercise.push({ tumoi: tumoiVal, nghia: nghiaVal });
               addedCount++;
             }
           }
 
           if (addedCount > 0) {
             renderTeacherList();
-            alert(`Tải thành công! Đã lọc lấy đúng ${addedCount} từ từ file Excel.`);
+            alert(`Tải thành công! Đã trích xuất ${addedCount} từ vào bảng biên tập.`);
           } else {
-            alert("Không phát hiện dữ liệu hợp lệ phía dưới dòng tiêu đề.");
+            alert("Không phát hiện thấy hàng dữ liệu hợp lệ phía dưới tiêu đề.");
           }
         } else {
-          alert("LỖI: File Excel thiếu cột tiêu đề bắt buộc ('Từ mới', 'Phiên âm', 'Nghĩa')!");
+          alert("LỖI: File Excel thiếu cột tiêu đề bắt buộc ('Từ mới' và 'Nghĩa')!");
         }
       };
       reader.readAsArrayBuffer(file);
       e.target.value = '';
     });
 
-    // LƯU BÀI TẬP LÊN CLOUD DATABASE (Thay thế hoàn toàn LocalStorage)
+    // LƯU BÀI TẬP LÊN CLOUD DATABASE (Tự động phân biệt Tạo mới hay Cập nhật bài cũ)
     document.getElementById('btn-save-exercise').addEventListener('click', () => {
-      if (currentExercise.length === 0) return alert("Hiện chưa có từ nào để tạo bài tập!");
+      if (currentExercise.length === 0) return alert("Hiện chưa có từ vựng nào trong danh sách!");
       
-      const exerciseId = Date.now(); // Dùng thời gian làm mã ID độc nhất cho bài tập
-      const newExercise = {
+      const isEditing = editingExerciseId !== null;
+      const exerciseId = isEditing ? editingExerciseId : Date.now();
+      
+      const targetExercise = {
         id: exerciseId,
-        date: new Date().toLocaleDateString('vi-VN'),
+        date: isEditing ? savedExercises.find(ex => ex.id === exerciseId).date : new Date().toLocaleDateString('vi-VN'),
         words: [...currentExercise]
       };
 
-      // Đẩy dữ liệu trực tiếp lên mây Firebase
-      database.ref('exercises/' + exerciseId).set(newExercise)
+      database.ref('exercises/' + exerciseId).set(targetExercise)
         .then(() => {
-          currentExercise = [];
-          renderTeacherList();
-          alert("🎉 Tuyệt vời! Bài tập đã được đồng bộ lên hệ thống Đám mây. Toàn bộ sinh viên đã có thể làm bài tập này!");
+          alert(isEditing ? "🎉 Cập nhật bài tập thành công lên hệ thống Cloud!" : "🎉 Tạo và lưu bài tập mới thành công lên Cloud!");
+          resetTeacherForm();
+          renderTeacherExerciseList();
         })
         .catch((error) => {
-          alert("Lỗi kết nối khi lưu bài tập: " + error.message);
+          alert("Lỗi kết nối Cloud: " + error.message);
         });
     });
 
-    // --- LOGIC SINH VIÊN ---
+    // --- LOGIC PHÂN HỆ SINH VIÊN ---
     function renderStudentExercises() {
       const container = document.getElementById('exercise-list');
       if (savedExercises.length === 0) {
         container.innerHTML = `<p class="col-span-full text-center text-gray-500 bg-white p-6 rounded-xl border">Hiện chưa có bài tập nào trên hệ thống Cloud.</p>`;
         return;
       }
-      // Sắp xếp bài tập mới nhất lên đầu
       const sortedExercises = [...savedExercises].reverse();
       container.innerHTML = sortedExercises.map((ex, idx) => `
         <div class="bg-white p-5 rounded-xl shadow border border-gray-100 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-blue-400 transition-all active:scale-95" onclick="openQuizById(${ex.id})">
           <h3 class="font-bold text-lg text-blue-600">Bài tập ngày ${ex.date}</h3>
-          <p class="text-xs text-gray-400 mt-2">Mã số bài: #${ex.id} | Số lượng từ: ${ex.words.length} từ</p>
+          <p class="text-xs text-gray-400 mt-2">Mã bài: #${ex.id} | Số từ: ${ex.words.length} từ</p>
         </div>
       `).join('');
     }
@@ -379,9 +445,9 @@
       const inputContainer = document.getElementById('quiz-inputs-container');
       inputContainer.innerHTML = '';
 
+      // Chỉ lọc lấy duy nhất 1 ô cần điền dựa theo lựa chọn gợi ý đầu vào
       const fields = [
         { key: 'tumoi', label: 'Từ mới' },
-        { key: 'phienam', label: 'Phiên âm' },
         { key: 'nghia', label: 'Nghĩa' }
       ].filter(f => f.key !== quizPromptType);
 
@@ -391,7 +457,7 @@
         input.placeholder = `Nhập đúng ${field.label}`;
         input.dataset.key = field.key;
         input.dataset.correct = word[field.key];
-        input.className = "quiz-input border-2 p-3.5 rounded-xl text-base text-center outline-none focus:border-blue-400 transition-all font-semibold shadow-sm bg-gray-50";
+        input.className = "quiz-input border-2 p-4 rounded-xl text-base text-center outline-none focus:border-blue-400 transition-all font-semibold shadow-sm bg-gray-50 w-full";
         
         input.addEventListener('change', checkInput);
         inputContainer.appendChild(input);
@@ -414,6 +480,7 @@
         input.disabled = true;
         checkAllDone();
       } else if (userVal !== '') {
+        // Làm sai: Viền đỏ + chữ đỏ + rung lắc và tự động xóa sau 400 mili giây
         input.classList.add('border-red-500', 'text-red-500', 'shake');
         setTimeout(() => {
           input.value = '';
@@ -433,6 +500,7 @@
       }
     }
 
+    // Khởi chạy ứng dụng tại màn hình Login mặc định
     showPage('login');
   </script>
 </body>
