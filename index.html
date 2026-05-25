@@ -16,17 +16,39 @@
   <style>
     * { touch-action: manipulation; }
 
+    /* Nền tím tối huyền ảo */
     .animated-bg {
       background: linear-gradient(-45deg, #0f0c29, #302b63, #240b36, #1a0033);
       background-size: 400% 400%;
       animation: gradientBG 15s ease infinite;
+      position: relative;
+      overflow-x: hidden;
     }
     @keyframes gradientBG {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
-    .page-section { transition: opacity 0.4s ease-out, transform 0.4s ease-out; }
+
+    /* Hiệu ứng chữ Hán bay lơ lửng dưới nền */
+    .floating-char {
+      position: absolute;
+      color: rgba(255, 255, 255, 0.05);
+      font-size: 3rem;
+      font-weight: bold;
+      animation: floatUp 20s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Hiệu ứng chung */
+    .page-section { transition: opacity 0.4s ease-out, transform 0.4s ease-out; z-index: 10; position: relative; }
     .page-section.hidden { display: none !important; opacity: 0; transform: translateY(20px); }
     .page-section:not(.hidden) { animation: pageEnter 0.5s forwards; }
     @keyframes pageEnter { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
@@ -38,15 +60,48 @@
       backdrop-filter: blur(10px); 
     }
 
+    /* Hiệu ứng ô nhập liệu (Input Focus) */
+    .input-styled {
+      background: rgba(255, 255, 255, 0.8);
+      border: 2px solid #e9d5ff; /* purple-200 */
+      transition: all 0.3s ease;
+    }
+    .input-styled:focus {
+      background: #ffffff;
+      border-color: #a855f7; /* purple-500 */
+      box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.2);
+    }
+
     /* Tùy chỉnh thanh cuộn cho bảng */
     .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
     .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #c4b5fd; border-radius: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #8b5cf6; }
+
+    /* Vòng tròn Loading */
+    .loader-spinner {
+      border: 3px solid rgba(255,255,255,0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="animated-bg min-h-screen font-sans text-gray-800">
   
+  <!-- Các hạt background bay lơ lửng -->
+  <div id="bg-particles">
+    <div class="floating-char" style="left: 10%; animation-duration: 25s; animation-delay: 0s;">学</div>
+    <div class="floating-char" style="left: 30%; animation-duration: 20s; animation-delay: 5s;">习</div>
+    <div class="floating-char" style="left: 50%; animation-duration: 28s; animation-delay: 2s;">中</div>
+    <div class="floating-char" style="left: 70%; animation-duration: 22s; animation-delay: 8s;">文</div>
+    <div class="floating-char" style="left: 85%; animation-duration: 26s; animation-delay: 1s;">汉</div>
+    <div class="floating-char" style="left: 20%; animation-duration: 24s; animation-delay: 12s;">语</div>
+  </div>
+
   <!-- Custom Modal -->
   <div id="custom-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4 backdrop-blur-sm transition-opacity">
     <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden transform transition-all scale-95 opacity-0" id="custom-modal-content">
@@ -74,7 +129,7 @@
   <main id="app" class="max-w-5xl mx-auto p-4 flex justify-center items-center min-h-[85vh] w-full">
     
     <!-- 1. Trang Đăng nhập / Đăng ký Mới -->
-    <div id="page-login" class="page-section glass-card p-0 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col">
+    <div id="page-login" class="page-section glass-card p-0 rounded-2xl shadow-2xl shadow-purple-900/50 w-full max-w-md overflow-hidden flex flex-col">
       <!-- Tabs header -->
       <div class="flex w-full bg-gray-100">
         <button id="tab-btn-login" class="flex-1 py-4 font-bold text-purple-700 bg-white border-t-4 border-purple-600 transition-colors">Đăng Nhập</button>
@@ -82,83 +137,102 @@
       </div>
 
       <!-- Tab Đăng nhập -->
-      <div id="tab-login-content" class="p-6 md:p-8 flex flex-col gap-4">
-        <h2 class="text-2xl font-bold text-center text-purple-700 mb-2">Chào mừng trở lại!</h2>
-        <input type="email" id="login-email" placeholder="Nhập địa chỉ Email" class="border-2 rounded-lg p-3.5 text-sm focus:border-purple-500 outline-none w-full bg-gray-50 transition-colors">
+      <div id="tab-login-content" class="p-6 md:p-8 flex flex-col gap-4 relative">
+        <div class="absolute top-4 right-6 text-4xl opacity-20">📚</div>
+        
+        <h2 class="text-2xl font-bold text-center text-purple-700 mb-0">Chào mừng trở lại!</h2>
+        <p class="text-center text-purple-600 font-medium mb-4 text-lg">汉语</p>
+
+        <input type="email" id="login-email" placeholder="Nhập địa chỉ Email" class="input-styled rounded-lg p-3.5 text-sm outline-none w-full">
         
         <div class="relative">
-          <input type="password" id="login-password" placeholder="Nhập Mật khẩu" class="border-2 rounded-lg p-3.5 pr-12 text-sm focus:border-purple-500 outline-none w-full bg-gray-50 transition-colors">
-          <button type="button" title="Hiện/Ẩn mật khẩu" aria-label="Hiện/Ẩn mật khẩu" onclick="togglePassword('login-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-purple-600 focus:outline-none">
+          <input type="password" id="login-password" placeholder="Nhập Mật khẩu" class="input-styled rounded-lg p-3.5 pr-12 text-sm outline-none w-full">
+          <button type="button" title="Hiện/Ẩn mật khẩu" aria-label="Hiện/Ẩn mật khẩu" onclick="togglePassword('login-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-700 focus:outline-none transition-colors">
             <svg class="w-5 h-5 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
           </button>
         </div>
 
-        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-600 select-none">
-          <input type="checkbox" id="login-remember" checked class="w-4 h-4 accent-purple-600 rounded">
+        <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-600 select-none hover:text-purple-600 transition-colors w-max">
+          <input type="checkbox" id="login-remember" checked class="w-4 h-4 accent-purple-600 rounded cursor-pointer">
           Ghi nhớ đăng nhập
         </label>
 
-        <button id="btn-do-login" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-5 py-3.5 rounded-lg hover:opacity-90 active:scale-95 transition-all font-bold shadow-md mt-2">Đăng Nhập</button>
+        <button id="btn-do-login" class="flex justify-center items-center gap-2 w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-5 py-3.5 rounded-lg hover:shadow-lg hover:shadow-purple-500/40 active:scale-[0.98] transition-all font-bold mt-2">
+          <div id="login-spinner" class="loader-spinner hidden"></div>
+          <span id="login-btn-text">Đăng Nhập</span>
+        </button>
       </div>
 
       <!-- Tab Đăng ký -->
-      <div id="tab-register-content" class="hidden p-6 md:p-8 flex flex-col gap-4">
-        <h2 class="text-xl font-bold text-center text-gray-800 mb-2">Tạo tài khoản mới</h2>
-        <input type="email" id="reg-email" placeholder="Nhập địa chỉ Gmail" class="border-2 rounded-lg p-3.5 text-sm focus:border-green-500 outline-none w-full bg-gray-50 transition-colors">
+      <div id="tab-register-content" class="hidden p-6 md:p-8 flex flex-col gap-4 relative">
+        <div class="absolute top-4 right-6 text-4xl opacity-20">✍️</div>
+        <h2 class="text-xl font-bold text-center text-gray-800 mb-2 mt-2">Tạo tài khoản mới</h2>
+        
+        <input type="email" id="reg-email" placeholder="Nhập địa chỉ Gmail" class="input-styled rounded-lg p-3.5 text-sm outline-none w-full">
         
         <div class="relative">
-          <input type="password" id="reg-password" placeholder="Mật khẩu (từ 6 ký tự)" class="border-2 rounded-lg p-3.5 pr-12 text-sm focus:border-green-500 outline-none w-full bg-gray-50 transition-colors">
-          <button type="button" title="Hiện/Ẩn mật khẩu" aria-label="Hiện/Ẩn mật khẩu" onclick="togglePassword('reg-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-green-600 focus:outline-none">
+          <input type="password" id="reg-password" placeholder="Mật khẩu (từ 6 ký tự)" class="input-styled rounded-lg p-3.5 pr-12 text-sm outline-none w-full">
+          <button type="button" title="Hiện/Ẩn mật khẩu" aria-label="Hiện/Ẩn mật khẩu" onclick="togglePassword('reg-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-700 focus:outline-none transition-colors">
             <svg class="w-5 h-5 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
           </button>
         </div>
 
         <div class="relative">
-          <input type="password" id="reg-repassword" placeholder="Nhập lại Mật khẩu" class="border-2 rounded-lg p-3.5 pr-12 text-sm focus:border-green-500 outline-none w-full bg-gray-50 transition-colors">
-          <button type="button" title="Hiện/Ẩn mật khẩu" aria-label="Hiện/Ẩn mật khẩu" onclick="togglePassword('reg-repassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-green-600 focus:outline-none">
+          <input type="password" id="reg-repassword" placeholder="Nhập lại Mật khẩu" class="input-styled rounded-lg p-3.5 pr-12 text-sm outline-none w-full">
+          <button type="button" title="Hiện/Ẩn mật khẩu" aria-label="Hiện/Ẩn mật khẩu" onclick="togglePassword('reg-repassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-purple-400 hover:text-purple-700 focus:outline-none transition-colors">
             <svg class="w-5 h-5 eye-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
           </button>
         </div>
 
-        <button id="btn-do-register" class="w-full bg-green-500 text-white px-5 py-3.5 rounded-lg hover:bg-green-600 active:scale-95 transition-all font-bold shadow-md flex justify-center items-center gap-2 mt-2">
-          <span>Xác minh tài khoản qua Gmail</span>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-        </button>
+        <div class="flex flex-col gap-2 mt-2">
+          <!-- Nút Gửi Link -->
+          <button id="btn-do-register" class="flex justify-center items-center gap-2 w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-5 py-3.5 rounded-lg hover:shadow-lg hover:shadow-teal-500/40 active:scale-[0.98] transition-all font-bold">
+            <div id="reg-spinner" class="loader-spinner hidden"></div>
+            <span id="reg-btn-text">Gửi link xác minh đăng ký</span>
+          </button>
+
+          <!-- Nút Mở Gmail (Ẩn đi lúc đầu) -->
+          <button id="btn-open-gmail" class="hidden flex justify-center items-center gap-2 w-full bg-white border-2 border-red-500 text-red-500 px-5 py-3.5 rounded-lg hover:bg-red-50 active:scale-[0.98] transition-all font-bold">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-2.023 2.309-3.178 3.927-1.943L12 8.568l8.073-5.054C21.691 2.279 24 3.434 24 5.457z"/></svg>
+            <span>Mở ứng dụng Gmail</span>
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- 2. Trang Chọn Vai Trò -->
     <div id="page-role" class="page-section hidden w-full max-w-md">
-      <h2 class="text-2xl font-bold mb-6 text-center text-white drop-shadow-md">Bạn là ai?</h2>
+      <h2 class="text-3xl font-bold mb-6 text-center text-white drop-shadow-lg">Bạn là ai?</h2>
       <div class="grid grid-cols-2 gap-4">
-        <button id="role-teacher" class="glass-card p-6 rounded-2xl shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center gap-3 group active:scale-95 border border-white/50">
-          <span class="text-5xl group-hover:scale-110 transition-transform drop-shadow-sm">👨‍🏫</span>
-          <span class="font-semibold text-base text-gray-800">Giảng viên</span>
+        <button id="role-teacher" class="glass-card p-6 rounded-2xl shadow-xl hover:-translate-y-2 hover:shadow-purple-500/50 transition-all flex flex-col items-center gap-3 group active:scale-95 border border-white/50">
+          <span class="text-6xl group-hover:scale-110 transition-transform drop-shadow-sm">👨‍🏫</span>
+          <span class="font-bold text-lg text-purple-900 group-hover:text-purple-600 transition-colors">Giảng viên</span>
         </button>
-        <button id="role-student" class="glass-card p-6 rounded-2xl shadow-xl hover:-translate-y-1 transition-all flex flex-col items-center gap-3 group active:scale-95 border border-white/50">
-          <span class="text-5xl group-hover:scale-110 transition-transform drop-shadow-sm">🎓</span>
-          <span class="font-semibold text-base text-gray-800">Sinh viên</span>
+        <button id="role-student" class="glass-card p-6 rounded-2xl shadow-xl hover:-translate-y-2 hover:shadow-purple-500/50 transition-all flex flex-col items-center gap-3 group active:scale-95 border border-white/50">
+          <span class="text-6xl group-hover:scale-110 transition-transform drop-shadow-sm">🎓</span>
+          <span class="font-bold text-lg text-purple-900 group-hover:text-purple-600 transition-colors">Sinh viên</span>
         </button>
       </div>
     </div>
 
     <!-- 3. Trang Giảng Viên -->
     <div id="page-teacher" class="page-section hidden w-full grid grid-cols-1 lg:grid-cols-4 gap-6 items-start">
-      <div class="glass-card p-4 md:p-5 rounded-2xl shadow-2xl lg:col-span-1">
-        <h3 class="font-bold text-lg text-purple-700 mb-3 pb-2 border-b border-purple-100">Bài tập trên Cloud</h3>
-        <div id="teacher-exercise-list" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1 custom-scrollbar"></div>
+      <div class="glass-card p-4 md:p-5 rounded-2xl shadow-2xl lg:col-span-1 border border-white/50">
+        <h3 class="font-bold text-lg text-purple-800 mb-3 pb-2 border-b border-purple-200">Bài tập trên Cloud</h3>
+        <!-- Thêm p-1.5 để nới lỏng khung viền, tăng khoảng cách các bài lên space-y-3 -->
+        <div id="teacher-exercise-list" class="space-y-3 max-h-[60vh] overflow-y-auto p-1.5 custom-scrollbar"></div>
       </div>
 
-      <div class="glass-card p-4 md:p-6 rounded-2xl shadow-2xl lg:col-span-3">
-        <div class="flex justify-between items-center mb-4 border-b pb-3 flex-wrap gap-2">
-          <h2 id="teacher-form-title" class="text-xl font-bold text-purple-600">Thêm Bài Tập Mới</h2>
+      <div class="glass-card p-4 md:p-6 rounded-2xl shadow-2xl lg:col-span-3 border border-white/50">
+        <div class="flex justify-between items-center mb-4 border-b border-purple-100 pb-3 flex-wrap gap-2">
+          <h2 id="teacher-form-title" class="text-xl font-bold text-purple-700">Thêm Bài Tập Mới</h2>
           <button id="btn-clear-edit" class="hidden text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-200 transition-colors font-medium">Hủy sửa / Tạo bài mới</button>
         </div>
         
-        <input type="text" id="input-title" placeholder="Nhập tiêu đề bài tập (VD: Bài 1 - HSK1)" class="w-full border-2 rounded-lg p-3 text-sm focus:border-purple-500 outline-none transition-all font-semibold mb-4 bg-purple-50/30">
+        <input type="text" id="input-title" placeholder="Nhập tiêu đề bài tập (VD: Bài 1 - HSK1)" class="w-full input-styled rounded-lg p-3 text-sm transition-all font-bold mb-4 text-purple-900 placeholder-purple-300">
 
         <!-- Vùng cấu hình và chọn file Excel -->
-        <div class="mb-5 border-2 border-dashed border-purple-300 p-4 rounded-xl bg-purple-50/50 relative">
+        <div class="mb-5 border-2 border-dashed border-purple-300 p-4 rounded-xl bg-purple-50/50 relative hover:bg-purple-50/80 transition-colors">
           <h4 class="text-sm font-bold text-purple-700 mb-3 flex items-center gap-2">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             Tải lên từ file Excel nâng cao
@@ -167,54 +241,53 @@
           <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
             <div>
               <label class="block text-[11px] font-bold text-gray-500 mb-1">Cột: Từ mới</label>
-              <input type="text" id="excel-col-tumoi" value="A" class="w-full border rounded p-1.5 text-sm text-center focus:border-purple-500 outline-none font-bold uppercase">
+              <input type="text" id="excel-col-tumoi" value="A" class="w-full input-styled rounded p-1.5 text-sm text-center font-bold uppercase">
             </div>
             <div>
               <label class="block text-[11px] font-bold text-gray-500 mb-1">Cột: Phiên âm</label>
-              <input type="text" id="excel-col-phienam" value="B" class="w-full border rounded p-1.5 text-sm text-center focus:border-purple-500 outline-none font-bold uppercase">
+              <input type="text" id="excel-col-phienam" value="B" class="w-full input-styled rounded p-1.5 text-sm text-center font-bold uppercase">
             </div>
             <div>
               <label class="block text-[11px] font-bold text-gray-500 mb-1">Cột: Nghĩa</label>
-              <input type="text" id="excel-col-nghia" value="C" class="w-full border rounded p-1.5 text-sm text-center focus:border-purple-500 outline-none font-bold uppercase">
+              <input type="text" id="excel-col-nghia" value="C" class="w-full input-styled rounded p-1.5 text-sm text-center font-bold uppercase">
             </div>
             <div>
               <label class="block text-[11px] font-bold text-gray-500 mb-1">Từ dòng</label>
-              <input type="number" id="excel-row-start" value="2" min="1" class="w-full border rounded p-1.5 text-sm text-center focus:border-purple-500 outline-none">
+              <input type="number" id="excel-row-start" value="2" min="1" class="w-full input-styled rounded p-1.5 text-sm text-center">
             </div>
             <div>
               <label class="block text-[11px] font-bold text-gray-500 mb-1">Đến dòng</label>
-              <input type="number" id="excel-row-end" placeholder="Hết" class="w-full border rounded p-1.5 text-sm text-center focus:border-purple-500 outline-none">
+              <input type="number" id="excel-row-end" placeholder="Hết" class="w-full input-styled rounded p-1.5 text-sm text-center">
             </div>
           </div>
 
           <div class="flex items-center">
-            <input type="file" id="excel-upload" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer transition-colors"/>
+            <input type="file" id="excel-upload" accept=".xlsx, .xls" class="block w-full text-sm text-gray-500 file:mr-4 file:py-1.5 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer transition-colors"/>
           </div>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-          <input type="text" id="input-tumoi" placeholder="Từ mới" class="border-2 rounded-lg p-2.5 text-sm focus:border-purple-500 outline-none">
-          <input type="text" id="input-phienam" placeholder="Phiên âm (Pinyin)" class="border-2 rounded-lg p-2.5 text-sm focus:border-purple-500 outline-none">
-          <input type="text" id="input-nghia" placeholder="Nghĩa" class="border-2 rounded-lg p-2.5 text-sm focus:border-purple-500 outline-none">
+          <input type="text" id="input-tumoi" placeholder="Từ mới" class="input-styled rounded-lg p-2.5 text-sm">
+          <input type="text" id="input-phienam" placeholder="Phiên âm (Pinyin)" class="input-styled rounded-lg p-2.5 text-sm">
+          <input type="text" id="input-nghia" placeholder="Nghĩa" class="input-styled rounded-lg p-2.5 text-sm">
         </div>
-        <button id="btn-add-word" class="w-full bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 active:scale-95 transition-all mb-5 text-sm font-bold shadow-md">Thêm từ thủ công</button>
+        <button id="btn-add-word" class="w-full bg-indigo-600 text-white px-5 py-2.5 rounded-lg hover:bg-indigo-700 active:scale-[0.98] transition-all mb-5 text-sm font-bold shadow-md">Thêm từ thủ công</button>
 
-        <p class="text-[11px] text-purple-600 mb-1 italic text-right">* Click vào chữ trong bảng để sửa trực tiếp</p>
-        <div class="overflow-x-auto max-h-52 border-2 border-gray-100 rounded-lg shadow-inner bg-gray-50 custom-scrollbar">
+        <p class="text-[11px] text-purple-600 mb-1 italic text-right font-medium">* Click vào chữ trong bảng để sửa trực tiếp</p>
+        <div class="overflow-x-auto max-h-52 border-2 border-purple-100 rounded-lg shadow-inner bg-white custom-scrollbar">
           <table class="w-full text-left border-collapse text-sm min-w-[500px]">
             <thead>
-              <tr class="bg-purple-50 sticky top-0 shadow-sm text-purple-800">
-                <!-- Căn chỉnh đều các cột -->
-                <th class="p-3 w-[25%] border-b">Từ mới</th>
-                <th class="p-3 w-[25%] border-b">Phiên âm</th>
-                <th class="p-3 w-[35%] border-b">Nghĩa</th>
-                <th class="p-3 w-[15%] text-center border-b">Xóa</th>
+              <tr class="bg-purple-100 sticky top-0 shadow-sm text-purple-900">
+                <th class="p-3 w-[25%] border-b border-purple-200">Từ mới</th>
+                <th class="p-3 w-[25%] border-b border-purple-200">Phiên âm</th>
+                <th class="p-3 w-[35%] border-b border-purple-200">Nghĩa</th>
+                <th class="p-3 w-[15%] text-center border-b border-purple-200">Xóa</th>
               </tr>
             </thead>
-            <tbody id="teacher-word-list" class="divide-y bg-white"></tbody>
+            <tbody id="teacher-word-list" class="divide-y divide-gray-100"></tbody>
           </table>
         </div>
-        <button id="btn-save-exercise" class="mt-5 w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3.5 rounded-xl font-bold hover:opacity-90 active:scale-95 transition-all shadow-lg text-base">Lưu Bài Tập Lên Đám Mây</button>
+        <button id="btn-save-exercise" class="mt-5 w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-3.5 rounded-xl font-bold hover:shadow-lg hover:shadow-teal-500/40 active:scale-[0.98] transition-all shadow-md text-base">Lưu Bài Tập Lên Đám Mây</button>
       </div>
     </div>
 
@@ -225,27 +298,27 @@
     </div>
 
     <!-- 5. Trang Sinh Viên: Làm bài -->
-    <div id="page-student-quiz" class="page-section hidden w-full glass-card p-5 md:p-8 rounded-2xl shadow-2xl max-w-2xl mx-auto">
-      <button id="btn-back-exercises" class="text-gray-500 hover:text-purple-700 mb-4 inline-block font-medium text-sm transition-colors flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Quay lại danh sách</button>
+    <div id="page-student-quiz" class="page-section hidden w-full glass-card p-5 md:p-8 rounded-2xl shadow-2xl max-w-2xl mx-auto border border-white/50">
+      <button id="btn-back-exercises" class="text-gray-500 hover:text-purple-700 mb-4 inline-block font-bold text-sm transition-colors flex items-center gap-1 bg-gray-100 px-3 py-1.5 rounded-lg w-max"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Quay lại</button>
       
-      <div id="quiz-setup" class="mb-6 bg-purple-50/50 p-5 rounded-xl border border-purple-100">
-        <h3 class="font-bold mb-4 text-purple-800 text-sm">Cài đặt thông tin làm từ gợi ý (Câu hỏi):</h3>
+      <div id="quiz-setup" class="mb-6 bg-purple-50 p-5 rounded-xl border border-purple-100 shadow-sm">
+        <h3 class="font-bold mb-4 text-purple-900 text-sm">Cài đặt thông tin làm từ gợi ý (Câu hỏi):</h3>
         <div class="flex flex-wrap gap-6 text-sm">
-          <label class="cursor-pointer flex items-center gap-2 font-medium text-gray-700"><input type="radio" name="prompt_type" value="tumoi" checked class="w-4 h-4 text-purple-600 accent-purple-600"> Chữ Hán (Từ mới)</label>
-          <label class="cursor-pointer flex items-center gap-2 font-medium text-gray-700"><input type="radio" name="prompt_type" value="phienam" class="w-4 h-4 text-purple-600 accent-purple-600"> Phiên âm</label>
-          <label class="cursor-pointer flex items-center gap-2 font-medium text-gray-700"><input type="radio" name="prompt_type" value="nghia" class="w-4 h-4 text-purple-600 accent-purple-600"> Nghĩa</label>
+          <label class="cursor-pointer flex items-center gap-2 font-bold text-gray-700"><input type="radio" name="prompt_type" value="tumoi" checked class="w-4 h-4 accent-purple-600"> Chữ Hán (Từ mới)</label>
+          <label class="cursor-pointer flex items-center gap-2 font-bold text-gray-700"><input type="radio" name="prompt_type" value="phienam" class="w-4 h-4 accent-purple-600"> Phiên âm</label>
+          <label class="cursor-pointer flex items-center gap-2 font-bold text-gray-700"><input type="radio" name="prompt_type" value="nghia" class="w-4 h-4 accent-purple-600"> Nghĩa</label>
         </div>
-        <button id="btn-start-quiz" class="mt-5 w-full bg-purple-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-purple-700 transition-all active:scale-95 text-sm shadow-md">Bắt đầu làm bài</button>
+        <button id="btn-start-quiz" class="mt-5 w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-lg font-bold hover:shadow-lg hover:shadow-purple-500/40 transition-all active:scale-[0.98] text-sm">Bắt đầu làm bài</button>
       </div>
 
       <div id="quiz-area" class="hidden text-center relative">
         <div class="mb-4 text-xs md:text-sm text-gray-400 font-bold tracking-wider uppercase flex justify-between items-center">
-          <span id="quiz-progress" class="bg-gray-100 px-3 py-1 rounded-full text-purple-600">Từ 1 / 10</span>
-          <button id="btn-skip-word" class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full hover:bg-purple-100 hover:text-purple-700 transition-colors flex items-center gap-1">Bỏ qua <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
+          <span id="quiz-progress" class="bg-purple-100 px-3 py-1 rounded-full text-purple-700 border border-purple-200">Từ 1 / 10</span>
+          <button id="btn-skip-word" class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full hover:bg-purple-600 hover:text-white transition-colors flex items-center gap-1 font-bold">Bỏ qua <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>
         </div>
         
-        <div class="mb-8 py-8 border-b border-gray-100 flex flex-col items-center justify-center min-h-[140px] bg-gradient-to-b from-transparent to-purple-50/30 rounded-xl" id="quiz-prompt-container">
-          <div class="text-5xl md:text-6xl font-bold text-gray-800" id="quiz-prompt">---</div>
+        <div class="mb-8 py-8 border-b border-gray-100 flex flex-col items-center justify-center min-h-[140px] bg-gradient-to-b from-white to-purple-50 rounded-xl shadow-inner border" id="quiz-prompt-container">
+          <div class="text-5xl md:text-6xl font-bold text-purple-900" id="quiz-prompt">---</div>
           <div class="text-xl text-purple-500 mt-3 font-medium hidden tracking-wide" id="quiz-pinyin">---</div>
         </div>
         
@@ -260,16 +333,14 @@
     // CẤU HÌNH FIREBASE - DÁN ĐOẠN MÃ CỦA BẠN VÀO ĐÂY
     // -------------------------------------------------------------
     const firebaseConfig = {
-  apiKey: "AIzaSyBynCOxVhtr5wp2d9miPDkwkzjma7C70Ik",
-  authDomain: "luyentiengtrung-fd6ed.firebaseapp.com",
-  databaseURL: "https://luyentiengtrung-fd6ed-default-rtdb.firebaseio.com",
-  projectId: "luyentiengtrung-fd6ed",
-  storageBucket: "luyentiengtrung-fd6ed.firebasestorage.app",
-  messagingSenderId: "1001015127985",
-  appId: "1:1001015127985:web:0548f63c11325b40f05790",
-  measurementId: "G-QB3PNTRMMC"
-};
-
+      apiKey: "AIzaSy...",
+      authDomain: "hoctiengtrung-...",
+      databaseURL: "https://hoctiengtrung-...",
+      projectId: "hoctiengtrung-...",
+      storageBucket: "hoctiengtrung-...",
+      messagingSenderId: "...",
+      appId: "..."
+    };
     
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
@@ -277,7 +348,7 @@
     auth.useDeviceLanguage(); 
     // -------------------------------------------------------------
 
-    // --- HIỆU ỨNG UI CHUNG ---
+    // --- HIỆU ỨNG UI & BUTTON LOADING ---
     function togglePassword(inputId, btn) {
       const input = document.getElementById(inputId);
       const icon = btn.querySelector('.eye-icon');
@@ -287,6 +358,24 @@
       } else {
         input.type = 'password';
         icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>`;
+      }
+    }
+
+    function setBtnLoading(btnId, spinnerId, textId, originalText, isLoading) {
+      const btn = document.getElementById(btnId);
+      const spinner = document.getElementById(spinnerId);
+      const textSpan = document.getElementById(textId);
+      
+      if (isLoading) {
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+        spinner.classList.remove('hidden');
+        textSpan.innerText = "Đang xử lý...";
+      } else {
+        btn.disabled = false;
+        btn.classList.remove('opacity-75', 'cursor-not-allowed');
+        spinner.classList.add('hidden');
+        textSpan.innerText = originalText;
       }
     }
 
@@ -317,11 +406,11 @@
       const actions = document.getElementById('custom-modal-actions');
       
       if (type === 'alert') {
-        actions.innerHTML = `<button onclick="closeModal()" class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-indigo-700 transition w-full sm:w-auto">Đã hiểu</button>`;
+        actions.innerHTML = `<button onclick="closeModal()" class="bg-indigo-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-indigo-700 transition w-full sm:w-auto shadow-md">Đã hiểu</button>`;
       } else if (type === 'confirm') {
         actions.innerHTML = `
-          <button onclick="closeModal(false)" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-300 transition">Không / Làm lại</button>
-          <button onclick="closeModal(true)" class="bg-purple-600 text-white px-5 py-2 rounded-lg font-medium hover:bg-purple-700 transition shadow-md">Đồng ý / Làm tiếp</button>
+          <button onclick="closeModal(false)" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold hover:bg-gray-300 transition">Không / Làm lại</button>
+          <button onclick="closeModal(true)" class="bg-purple-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-purple-700 transition shadow-md">Đồng ý / Làm tiếp</button>
         `;
         window.modalConfirmCallback = onConfirm;
       }
@@ -403,16 +492,43 @@
       if(pass.length < 6) return showModal("Mật khẩu bảo mật phải từ 6 ký tự trở lên!");
       if(pass !== repass) return showModal("Mật khẩu nhập lại không khớp!");
 
+      setBtnLoading('btn-do-register', 'reg-spinner', 'reg-btn-text', 'Gửi link xác minh đăng ký', true);
+
       auth.createUserWithEmailAndPassword(email, pass)
         .then((userCredential) => {
           userCredential.user.sendEmailVerification().then(() => {
             auth.signOut(); 
-            showModal("ĐĂNG KÝ THÀNH CÔNG!\n\nHệ thống vừa gửi 1 thư xác minh đến email của bạn.\nVui lòng kiểm tra email để kích hoạt tài khoản.", 'alert');
-            // Tự động mở Gmail ở tab mới
-            setTimeout(() => { window.open("https://mail.google.com", "_blank"); }, 2000);
+            setBtnLoading('btn-do-register', 'reg-spinner', 'reg-btn-text', 'Gửi link xác minh đăng ký', false);
+            
+            // Ẩn nút đăng ký, hiện nút mở Gmail
+            document.getElementById('btn-do-register').classList.add('hidden');
+            document.getElementById('btn-open-gmail').classList.remove('hidden');
+            document.getElementById('btn-open-gmail').classList.add('flex');
+
+            showModal("ĐĂNG KÝ THÀNH CÔNG!\n\nHệ thống vừa gửi 1 thư xác minh đến email của bạn.\nVui lòng bấm vào nút 'Mở ứng dụng Gmail' để kiểm tra hộp thư và kích hoạt tài khoản.", 'alert');
           });
         })
-        .catch(error => showModal("Lỗi đăng ký: " + error.message));
+        .catch(error => {
+          setBtnLoading('btn-do-register', 'reg-spinner', 'reg-btn-text', 'Gửi link xác minh đăng ký', false);
+          showModal("Lỗi đăng ký: " + error.message);
+        });
+    });
+
+    // Xử lý nút mở Gmail đa nền tảng
+    document.getElementById('btn-open-gmail').addEventListener('click', () => {
+      // Mở trình duyệt web mail.google.com (Trên điện thoại nó tự hỏi mở app nếu có)
+      window.open("https://mail.google.com/mail/u/0/#inbox", "_blank");
+      
+      // Reset lại nút để sau này người dùng có thể đăng ký tk khác
+      setTimeout(() => {
+        document.getElementById('btn-do-register').classList.remove('hidden');
+        document.getElementById('btn-do-register').classList.add('flex');
+        document.getElementById('btn-open-gmail').classList.add('hidden');
+        document.getElementById('btn-open-gmail').classList.remove('flex');
+        document.getElementById('reg-email').value = '';
+        document.getElementById('reg-password').value = '';
+        document.getElementById('reg-repassword').value = '';
+      }, 3000);
     });
 
     document.getElementById('btn-do-login').addEventListener('click', () => {
@@ -422,11 +538,16 @@
 
       if(!email || !pass) return showModal("Vui lòng nhập Email và Mật khẩu!");
 
+      setBtnLoading('btn-do-login', 'login-spinner', 'login-btn-text', 'Đăng Nhập', true);
+
       const persistence = remember ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION;
       
       auth.setPersistence(persistence).then(() => {
         return auth.signInWithEmailAndPassword(email, pass);
+      }).then(() => {
+        setBtnLoading('btn-do-login', 'login-spinner', 'login-btn-text', 'Đăng Nhập', false);
       }).catch(error => {
+        setBtnLoading('btn-do-login', 'login-spinner', 'login-btn-text', 'Đăng Nhập', false);
         if(error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
           showModal("Lỗi: Sai email hoặc mật khẩu!");
         } else {
@@ -458,9 +579,9 @@
       const tbody = document.getElementById('teacher-word-list');
       tbody.innerHTML = currentExercise.map((word, idx) => `
         <tr class="hover:bg-purple-50/50 transition-colors group">
-          <td class="p-2 md:p-3 font-semibold text-gray-800 border-b outline-none focus:bg-purple-100 rounded cursor-text" contenteditable="true" onblur="updateWord(${idx}, 'tumoi', this.innerText)">${word.tumoi}</td>
-          <td class="p-2 md:p-3 text-gray-600 border-b outline-none focus:bg-purple-100 rounded cursor-text" contenteditable="true" onblur="updateWord(${idx}, 'phienam', this.innerText)">${word.phienam}</td>
-          <td class="p-2 md:p-3 text-gray-600 border-b outline-none focus:bg-purple-100 rounded cursor-text" contenteditable="true" onblur="updateWord(${idx}, 'nghia', this.innerText)">${word.nghia}</td>
+          <td class="p-2 md:p-3 font-semibold text-gray-800 border-b outline-none focus:bg-white focus:ring-2 focus:ring-purple-300 rounded cursor-text" contenteditable="true" onblur="updateWord(${idx}, 'tumoi', this.innerText)">${word.tumoi}</td>
+          <td class="p-2 md:p-3 text-gray-600 border-b outline-none focus:bg-white focus:ring-2 focus:ring-purple-300 rounded cursor-text" contenteditable="true" onblur="updateWord(${idx}, 'phienam', this.innerText)">${word.phienam}</td>
+          <td class="p-2 md:p-3 text-gray-600 border-b outline-none focus:bg-white focus:ring-2 focus:ring-purple-300 rounded cursor-text" contenteditable="true" onblur="updateWord(${idx}, 'nghia', this.innerText)">${word.nghia}</td>
           <td class="p-2 md:p-3 text-center border-b">
             <button onclick="removeWord(${idx})" class="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-lg transition-all opacity-50 group-hover:opacity-100" title="Xóa từ này">
               <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 mx-auto"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
@@ -478,10 +599,10 @@
       if (savedExercises.length === 0) return container.innerHTML = `<p class="text-xs text-gray-400 text-center py-4">Chưa có bài tập.</p>`;
       const sorted = [...savedExercises].reverse();
       container.innerHTML = sorted.map(ex => `
-        <div class="p-3 rounded-xl border bg-gray-50 flex justify-between items-center gap-2 text-xs transition-all ${editingExerciseId === ex.id ? 'ring-2 ring-purple-500 bg-purple-50' : 'hover:border-purple-300'}">
+        <div class="p-3 rounded-xl border flex justify-between items-center gap-2 text-xs transition-all ${editingExerciseId === ex.id ? 'border-purple-500 ring-2 ring-purple-500 bg-purple-50 shadow-md scale-[1.02]' : 'bg-gray-50 border-gray-200 hover:border-purple-300'}">
           <div class="overflow-hidden flex-1 cursor-pointer" onclick="startEditExercise(${ex.id})">
-            <p class="font-bold text-purple-700 truncate">${ex.title}</p>
-            <p class="text-gray-400 text-[10px] mt-0.5">${ex.date} | ${ex.words.length} từ</p>
+            <p class="font-bold text-purple-700 truncate text-sm">${ex.title}</p>
+            <p class="text-gray-400 text-[10px] mt-0.5 font-medium">${ex.date} | ${ex.words.length} từ</p>
           </div>
           <button onclick="deleteCloudExercise(${ex.id})" class="text-gray-400 hover:text-red-500 hover:bg-red-100 p-2 rounded-lg transition-colors shrink-0" title="Xóa toàn bộ bài tập này">
             <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
@@ -495,8 +616,8 @@
         if(isOk) {
           database.ref('exercises/' + id).remove().then(() => {
             if(editingExerciseId === id) resetTeacherForm();
-            showModal("Đã xóa bài tập thành công.");
-          }).catch(e => showModal("Lỗi khi xóa: " + e.message));
+            showModal("Đã xóa bài tập thành công.", 'alert');
+          }).catch(e => showModal("Lỗi khi xóa: " + e.message, 'alert'));
         }
       });
     };
@@ -511,8 +632,8 @@
       document.getElementById('teacher-form-title').innerText = `Đang sửa bài: ${selected.title}`;
       document.getElementById('btn-clear-edit').classList.remove('hidden');
       document.getElementById('btn-save-exercise').innerText = "Cập Nhật Bài Lên Cloud";
-      document.getElementById('btn-save-exercise').classList.replace('from-green-500', 'from-blue-500');
-      document.getElementById('btn-save-exercise').classList.replace('to-emerald-600', 'to-indigo-600');
+      document.getElementById('btn-save-exercise').classList.replace('from-emerald-500', 'from-blue-600');
+      document.getElementById('btn-save-exercise').classList.replace('to-teal-600', 'to-indigo-600');
       renderTeacherList(); renderTeacherExerciseList();
     };
 
@@ -522,8 +643,8 @@
       document.getElementById('teacher-form-title').innerText = "Thêm Bài Tập Mới";
       document.getElementById('btn-clear-edit').classList.add('hidden');
       document.getElementById('btn-save-exercise').innerText = "Lưu Bài Tập Mới Lên Cloud";
-      document.getElementById('btn-save-exercise').classList.replace('from-blue-500', 'from-green-500');
-      document.getElementById('btn-save-exercise').classList.replace('to-indigo-600', 'to-emerald-600');
+      document.getElementById('btn-save-exercise').classList.replace('from-blue-600', 'from-emerald-500');
+      document.getElementById('btn-save-exercise').classList.replace('to-indigo-600', 'to-teal-600');
       renderTeacherList();
     }
 
@@ -540,17 +661,13 @@
       } else showModal("Vui lòng nhập ít nhất Từ mới và Nghĩa!");
     });
 
-    // Thuật toán chuyển tên cột (A, B, C...) thành Index số học (0, 1, 2...)
     function letterToIndex(letter) {
       letter = letter.toUpperCase();
       let index = 0;
-      for (let i = 0; i < letter.length; i++) {
-        index = index * 26 + (letter.charCodeAt(i) - 64);
-      }
+      for (let i = 0; i < letter.length; i++) { index = index * 26 + (letter.charCodeAt(i) - 64); }
       return index - 1;
     }
 
-    // Xử lý đọc file Excel theo Cấu hình Tùy chỉnh (Mapping)
     document.getElementById('excel-upload').addEventListener('change', (e) => {
       const file = e.target.files[0]; if (!file) return;
 
@@ -564,7 +681,6 @@
 
       const rowStartInput = parseInt(document.getElementById('excel-row-start').value);
       const rowStart = isNaN(rowStartInput) || rowStartInput < 1 ? 1 : rowStartInput;
-      
       const rowEndInput = parseInt(document.getElementById('excel-row-end').value);
       const rowEnd = isNaN(rowEndInput) ? Infinity : rowEndInput;
 
@@ -576,15 +692,12 @@
         const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
 
         let count = 0;
-        // Duyệt theo dòng do người dùng chỉ định (chỉ số mảng bắt đầu từ 0 nên trừ 1)
         for (let i = rowStart - 1; i < Math.min(rowEnd, json.length); i++) {
           if (!json[i]) continue;
           const row = json[i];
-          
           const t = row[idxT] ? String(row[idxT]).trim() : "";
           const p = row[idxP] ? String(row[idxP]).trim() : "";
           const n = row[idxN] ? String(row[idxN]).trim() : "";
-          
           if (t !== "") { currentExercise.push({ tumoi: t, phienam: p, nghia: n }); count++; }
         }
 
@@ -627,17 +740,17 @@
         const progressData = snap.val() || {};
         container.innerHTML = sorted.map(ex => {
           const prog = progressData[ex.id];
-          let statusHtml = `<span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Chưa làm</span>`;
+          let statusHtml = `<span class="bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md font-bold">Chưa làm</span>`;
           if (prog && prog.currentIndex > 0) {
             statusHtml = prog.currentIndex >= ex.words.length 
-                ? `<span class="bg-green-100 text-green-600 px-2 py-0.5 rounded-full font-bold shadow-sm">Hoàn thành ✔</span>` 
-                : `<span class="bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full font-bold shadow-sm">Đang làm (${prog.currentIndex}/${ex.words.length})</span>`;
+                ? `<span class="bg-green-100 text-green-600 px-2 py-0.5 rounded-md font-bold shadow-sm border border-green-200">Hoàn thành ✔</span>` 
+                : `<span class="bg-orange-100 text-orange-600 px-2 py-0.5 rounded-md font-bold shadow-sm border border-orange-200">Đang làm (${prog.currentIndex}/${ex.words.length})</span>`;
           }
           return `
-            <div class="glass-card p-5 rounded-2xl shadow-xl border border-white/50 cursor-pointer hover:shadow-2xl hover:-translate-y-1 hover:border-purple-300 transition-all active:scale-95" onclick="openQuizById(${ex.id})">
-              <h3 class="font-bold text-lg text-gray-800">${ex.title}</h3>
-              <p class="text-xs mt-3 flex justify-between items-center">
-                <span class="text-gray-500 font-medium">${ex.words.length} từ | ${ex.date}</span>
+            <div class="glass-card p-5 rounded-2xl shadow-xl border border-white/50 cursor-pointer hover:shadow-2xl hover:-translate-y-2 hover:border-purple-400 transition-all active:scale-95 group" onclick="openQuizById(${ex.id})">
+              <h3 class="font-bold text-lg text-gray-800 group-hover:text-purple-700 transition-colors">${ex.title}</h3>
+              <p class="text-xs mt-4 flex justify-between items-center">
+                <span class="text-gray-500 font-medium bg-white px-2 py-1 rounded-md border">${ex.words.length} từ | ${ex.date}</span>
                 ${statusHtml}
               </p>
             </div>
@@ -659,7 +772,6 @@
               quizCurrentIndex = prog.currentIndex;
               quizPromptType = prog.promptType || 'tumoi'; 
               
-              // Cập nhật lại UI nút radio cho đúng với lựa chọn cũ
               const radios = document.getElementsByName('prompt_type');
               for(let i=0; i<radios.length; i++) {
                 if(radios[i].value === quizPromptType) radios[i].checked = true;
